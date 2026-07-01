@@ -1,0 +1,423 @@
+name: Build UUVPN
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      build_android:
+        description: 'Build Android APK'
+        required: false
+        default: true
+        type: boolean
+      build_ios:
+        description: 'Build iOS IPA'
+        required: false
+        default: true
+        type: boolean
+      release_type:
+        description: 'Release type'
+        required: false
+        default: 'alpha'
+        type: choice
+        options:
+          - alpha
+          - beta
+          - release
+
+env:
+  # Android 配置
+  ANDROID_COMPILE_SDK: "33"
+  ANDROID_BUILD_TOOLS: "33.0.0"
+  ANDROID_TARGET_SDK: "33"
+  ANDROID_JDK_VERSION: "11"
+
+  # iOS 配置
+  IOS_XCODE_VERSION: "15.0"
+  IOS_DEPLOYMENT_TARGET: "15.0"
+
+jobs:
+  # ==================== Android 构建 ====================
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.build_android != 'false' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.ANDROID_JDK_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: |
+          cd Android-kotlin-Code
+          chmod +x gradlew
+
+      - name: Create local.properties
+        run: |
+          cd Android-kotlin-Code
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Create signing.properties (Debug)
+        if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/develop' }}
+        run: |
+          cd Android-kotlin-Code
+          echo "keystore.path=debug.keystore" > signing.properties
+          echo "keystore.password=android" >> signing.properties
+          echo "key.alias=androiddebugkey" >> signing.properties
+          echo "key.password=android" >> signing.properties
+
+      - name: Create signing.properties (Release)
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          cd Android-kotlin-Code
+          echo "keystore.path=release.keystore" > signing.properties
+          echo "keystore.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> signing.properties
+          echo "key.alias=${{ secrets.ANDROID_KEY_ALIAS }}" >> signing.properties
+          echo "key.password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> signing.properties
+
+      - name: Decode Android keystore
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          cd Android-kotlin-Code
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+
+      - name: Build Android Debug APK
+        if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/develop' }}
+        run: |
+          cd Android-kotlin-Code
+          ./gradlew app:assembleMeta-AlphaDebug --stacktrace
+
+      - name: Build Android Release APK
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          cd Android-kotlin-Code
+          ./gradlew app:assembleMeta-AlphaRelease --stacktrace
+
+      - name: Build Android APK (Default)
+        if: ${{ github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/v') && github.ref != 'refs/heads/develop' }}
+        run: |
+          cd Android-kotlin-Code
+          ./gradlew app:assembleMeta-AlphaRelease --stacktrace
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-${{ github.sha }}
+          path: |
+            Android-kotlin-Code/app/build/outputs/apk/**/*.apk
+            Android-kotlin-Code/app/build/outputs/apk/**/*.json
+          retention-days: 30
+
+      - name: Get APK filename
+        id: apk_name
+        run: |
+          if [ "${{ startsWith(github.ref, 'refs/tags/v') }}" = "true" ]; then
+            APK_NAME="UUVPN-Android-${{ github.ref_name }}.apk"
+          else
+            APK_NAME="UUVPN-Android-${{ github.sha }}.apk"
+          fi
+          echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
+
+      - name: Rename APK for release
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          cd Android-kotlin-Code/app/build/outputs/apk
+          find . -name "*.apk" -type f -exec mv {} "${{ steps.apk_name.outputs.apk_name }}" \;
+
+  # ==================== iOS 构建 ====================
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-latest
+    if: ${{ github.event.inputs.build_ios != 'false' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ env.IOS_XCODE_VERSION }}
+
+      - name: Show Xcode version
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Install Apple Certificate
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.IOS_CERTIFICATES_P12 }}
+          p12-password: ${{ secrets.IOS_CERTIFICATES_PASSWORD }}
+
+      - name: Install Provisioning Profile
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/uuvpn.mobileprovision
+
+      - name: Resolve Swift Package Dependencies
+        run: |
+          cd iOS-SwiftUI-Code
+          xcodebuild -resolvePackageDependencies -project uuvpn.xcodeproj -scheme SFI | xcpretty
+
+      - name: Build iOS App (Debug)
+        if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/develop' }}
+        run: |
+          cd iOS-SwiftUI-Code
+          xcodebuild clean build \
+            -project uuvpn.xcodeproj \
+            -scheme SFI \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            | xcpretty
+
+      - name: Build and Archive iOS App (Release)
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          cd iOS-SwiftUI-Code
+          xcodebuild clean archive \
+            -project uuvpn.xcodeproj \
+            -scheme SFI \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath build/UUVPN.xcarchive \
+            CODE_SIGN_IDENTITY="${{ secrets.IOS_SIGNING_IDENTITY }}" \
+            PROVISIONING_PROFILE_SPECIFIER="uuvpn" \
+            | xcpretty
+
+      - name: Create ExportOptions.plist
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          cd iOS-SwiftUI-Code
+          cat > ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>${{ secrets.IOS_TEAM_ID }}</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>compileBitcode</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export IPA
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          cd iOS-SwiftUI-Code
+          xcodebuild -exportArchive \
+            -archivePath build/UUVPN.xcarchive \
+            -exportPath build/ipa \
+            -exportOptionsPlist ExportOptions.plist \
+            | xcpretty
+
+      - name: Upload iOS IPA Artifact
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-${{ github.sha }}
+          path: iOS-SwiftUI-Code/build/ipa/*.ipa
+          retention-days: 30
+
+      - name: Upload iOS App Artifact (Debug)
+        if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/develop' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-app-debug-${{ github.sha }}
+          path: iOS-SwiftUI-Code/build/**/*.app
+          retention-days: 7
+
+      - name: Get IPA filename
+        id: ipa_name
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          IPA_NAME="UUVPN-iOS-${{ github.ref_name }}.ipa"
+          echo "ipa_name=$IPA_NAME" >> $GITHUB_OUTPUT
+
+      - name: Rename IPA for release
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          cd iOS-SwiftUI-Code/build/ipa
+          find . -name "*.ipa" -type f -exec mv {} "${{ steps.ipa_name.outputs.ipa_name }}" \;
+
+  # ==================== 发布到 GitHub Releases ====================
+  release:
+    name: Create GitHub Release
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Android APK
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk-${{ github.sha }}
+          path: artifacts/android
+
+      - name: Download iOS IPA
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-ipa-${{ github.sha }}
+          path: artifacts/ios
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION=${{ github.ref_name }}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Release Notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << EOF
+          # UUVPN ${{ steps.get_version.outputs.version }}
+
+          ## 🎉 新版本发布
+
+          ### 📱 Android 版本
+          - 支持 Android 5.0+ (推荐 Android 7.0+)
+          - 支持 armeabi-v7a, arm64-v8a, x86, x86_64 架构
+          - 基于 CLASH (mihomo) 核心
+
+          ### 🍎 iOS 版本
+          - 支持 iOS 15.0+
+          - 基于 SINGBOX 核心
+          - 支持 iPhone 和 iPad
+
+          ## 📥 下载说明
+
+          ### Android
+          下载 APK 文件并安装,首次安装需要授予必要权限。
+
+          ### iOS
+          IPA 文件需要通过 TestFlight 或第三方工具安装。
+
+          ## 🔄 更新内容
+
+          请查看 [Commits](https://github.com/${{ github.repository }}/commits/${{ github.ref_name }}) 了解详细更新内容。
+
+          ## 📝 问题反馈
+
+          如遇到问题,请在 [Issues](https://github.com/${{ github.repository }}/issues) 中反馈。
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: UUVPN ${{ steps.get_version.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') }}
+          files: |
+            artifacts/android/*.apk
+            artifacts/ios/*.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==================== 上传到 TestFlight (iOS) ====================
+  upload-testflight:
+    name: Upload to TestFlight
+    needs: [build-ios]
+    runs-on: macos-latest
+    if: ${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, 'alpha') }}
+
+    steps:
+      - name: Download iOS IPA
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-ipa-${{ github.sha }}
+          path: artifacts/ios
+
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: artifacts/ios/*.ipa
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+
+  # ==================== 清理旧构建产物 ====================
+  cleanup:
+    name: Cleanup old artifacts
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+
+    steps:
+      - name: Delete old artifacts
+        uses: c-hive/gha-remove-artifacts@v1
+        with:
+          age: '30 days'
+          skip-recent: 5
+
+  # ==================== 通知 ====================
+  notify:
+    name: Send Notification
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-latest
+    if: ${{ always() && github.event_name == 'push' }}
+
+    steps:
+      - name: Send Telegram Notification
+        uses: appleboy/telegram-action@master
+        if: ${{ secrets.TELEGRAM_BOT_TOKEN != '' }}
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
+          message: |
+            *UUVPN Build Notification*
+
+            📦 **Repository**: ${{ github.repository }}
+            🌿 **Branch**: ${{ github.ref_name }}
+            🔄 **Commit**: ${{ github.sha }}
+            ✅ **Status**:
+            - Android: ${{ needs.build-android.result }}
+            - iOS: ${{ needs.build-ios.result }}
+
+            👤 **Author**: ${{ github.actor }}
+            💬 **Message**: ${{ github.event.head_commit.message }}
+
+            [View Build](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
