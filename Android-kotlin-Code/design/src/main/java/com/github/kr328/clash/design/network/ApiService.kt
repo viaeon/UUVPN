@@ -350,15 +350,18 @@ data class SubscribeResponse (
 data class SubscribeData  (
 
     @SerializedName("plan_id") val plan_id : Int?,
-    @SerializedName("token") val token : String,
+    @SerializedName("token") val token : String?,
     @SerializedName("expired_at") val expired_at : Long?,
-    @SerializedName("u") val u : Long,
-    @SerializedName("d") val d : Long,
+    @SerializedName("u") val u : Long?,
+    @SerializedName("d") val d : Long?,
     @SerializedName("transfer_enable") val transfer_enable : Long?,
-    @SerializedName("email") val email : String,
-    @SerializedName("uuid") val uuid : String,
+    @SerializedName("email") val email : String?,
+    @SerializedName("uuid") val uuid : String?,
+    @SerializedName("device_limit") val device_limit : Int?,
+    @SerializedName("speed_limit") val speed_limit : Int?,
+    @SerializedName("next_reset_at") val next_reset_at : Long?,
     @SerializedName("plan") val plan : PlanData?,
-    @SerializedName("subscribe_url") val subscribe_url : String,
+    @SerializedName("subscribe_url") val subscribe_url : String?,
     @SerializedName("reset_day") val reset_day : String?
 
 )

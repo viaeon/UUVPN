@@ -83,8 +83,15 @@ class ProfileDesign (context: Context) : Design<ProfileDesign.Request>(context) 
 
         if ( APIGlobalObject.subData == null){
             val gson = Gson()
-            val cached_userSubscritedata =  gson.fromJson(PreferenceManager.cached_userSubscritedata, SubscribeResponse::class.java)
-            APIGlobalObject.subData =  cached_userSubscritedata.data
+            val cachedStr = PreferenceManager.cached_userSubscritedata
+            if (!cachedStr.isNullOrEmpty()) {
+                try {
+                    val cached_userSubscritedata = gson.fromJson(cachedStr, SubscribeResponse::class.java)
+                    APIGlobalObject.subData = cached_userSubscritedata?.data
+                } catch (e: Exception) {
+                    // 缓存数据格式不匹配，忽略
+                }
+            }
         }
         binding.accountEmail = PreferenceManager.loginemail
 
