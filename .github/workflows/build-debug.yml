@@ -109,6 +109,15 @@ jobs:
             -skipPackagePluginManifestValidation \
             -skipMacroValidation \
             2>&1 | tee build_output.log
+          
+          # 立即检查构建结果
+          echo "Build completed, checking results..."
+          BUILD_RESULT=$(grep "BUILD SUCCEEDED" build_output.log || echo "BUILD FAILED")
+          echo "$BUILD_RESULT"
+          
+          # 显示构建产物目录
+          echo "Checking DerivedData directory..."
+          find ~/Library/Developer/Xcode/DerivedData -name "*.app" -type d || echo "No .app found in DerivedData"
       
       - name: Check if build succeeded
         if: steps.build_attempt_1.outcome == 'failure'
@@ -164,6 +173,14 @@ jobs:
           if [ -z "$APP_PATH" ]; then
             echo "Searching in Debug-iphonesimulator directory..."
             APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -path "*Debug-iphonesimulator*.app" -type d | head -n 1)
+          fi
+          
+          # 方法6: 列出所有 DerivedData 内容
+          if [ -z "$APP_PATH" ]; then
+            echo "Listing ALL contents in DerivedData..."
+            find ~/Library/Developer/Xcode/DerivedData -type d -name "*.app" 2>/dev/null || true
+            find ~/Library/Developer/Xcode/DerivedData -type d -name "Build" 2>/dev/null || true
+            ls -R ~/Library/Developer/Xcode/DerivedData/ 2>/dev/null | head -100 || true
           fi
           
           if [ -n "$APP_PATH" ] && [ -d "$APP_PATH" ]; then
