@@ -95,7 +95,6 @@ jobs:
       
       - name: Build iOS Debug App (attempt 1 - with verbose output)
         id: build_attempt_1
-        continue-on-error: true
         run: |
           cd iOS-SwiftUI-Code
           xcodebuild clean build \
@@ -110,22 +109,28 @@ jobs:
             -skipMacroValidation \
             2>&1 | tee build_output.log
           
-          # 立即检查构建结果
-          echo "Build completed, checking results..."
-          BUILD_RESULT=$(grep "BUILD SUCCEEDED" build_output.log || echo "BUILD FAILED")
-          echo "$BUILD_RESULT"
+          # 检查构建结果
+          if grep -q "BUILD SUCCEEDED" build_output.log; then
+            echo "✅ BUILD SUCCEEDED"
+            echo "build_status=succeeded" >> $GITHUB_OUTPUT
+          else
+            echo "❌ BUILD FAILED"
+            echo "Last 50 lines of build log:"
+            tail -50 build_output.log
+            echo "build_status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
           
           # 显示构建产物目录
-          echo "Checking DerivedData directory..."
+          echo "Checking DerivedData directory for .app files..."
           find ~/Library/Developer/Xcode/DerivedData -name "*.app" -type d || echo "No .app found in DerivedData"
       
       - name: Check if build succeeded
-        if: steps.build_attempt_1.outcome == 'failure'
+        if: failure()
         run: |
-          echo "First build attempt failed. Trying alternative approach..."
+          echo "Build failed. Checking error messages..."
           cd iOS-SwiftUI-Code
-          # 尝试使用 xcpretty 获取更清晰的错误信息
-          cat build_output.log | grep -A 5 "error:" || echo "No specific error found in log"
+          cat build_output.log | grep -A 10 "error:" || echo "No specific error found"
           exit 1
 
       - name: Find and upload iOS Debug App
