@@ -111,7 +111,7 @@ class MainActivity : BaseActivity<MainDesign>() {
                     //存储到本地
                     val plainid = subcache.data.plan_id ?: 0
 //                    或者检查使用量
-                    val guoqi = (subcache.data.u ) +  (subcache.data.d) >  (subcache.data.transfer_enable ?: 0) && (subcache.data.transfer_enable ?: 0) > 0
+                    val guoqi = (subcache.data.u ?: 0) + (subcache.data.d ?: 0) > (subcache.data.transfer_enable ?: 0) && (subcache.data.transfer_enable ?: 0) > 0
                     if ( plainid == 0 || guoqi ) {
                         //提示到期
                         //删除所有节点
