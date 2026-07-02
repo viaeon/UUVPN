@@ -101,7 +101,7 @@ jobs:
             -project uuvpn.xcodeproj \
             -scheme SFI \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.3' \
+            -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
