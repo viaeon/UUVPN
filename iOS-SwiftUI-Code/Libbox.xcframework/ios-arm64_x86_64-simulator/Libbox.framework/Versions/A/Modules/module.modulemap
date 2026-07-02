@@ -1,8 +1,10 @@
-framework module "Libbox" {
+framework module Libbox {
+	umbrella header "Libbox.h"
+	
 	header "ref.h"
-    header "Libbox.objc.h"
-    header "Universe.objc.h"
-    header "Libbox.h"
-
-    export *
+	header "Libbox.objc.h"
+	header "Universe.objc.h"
+	
+	export *
+	module * { export * }
 }
