@@ -149,6 +149,24 @@ jobs:
           cd iOS-SwiftUI-Code
           xcodebuild -list -project uuvpn.xcodeproj
 
+      - name: Diagnose Libbox module
+        run: |
+          cd iOS-SwiftUI-Code
+          echo "=== Libbox.xcframework Info.plist ==="
+          cat Libbox.xcframework/Info.plist
+          echo ""
+          echo "=== Simulator module.modulemap ==="
+          cat Libbox.xcframework/ios-arm64_x86_64-simulator/Libbox.framework/Versions/A/Modules/module.modulemap
+          echo ""
+          echo "=== Simulator Headers ==="
+          ls -la Libbox.xcframework/ios-arm64_x86_64-simulator/Libbox.framework/Versions/A/Headers/
+          echo ""
+          echo "=== Check for Swift module interface ==="
+          find Libbox.xcframework/ios-arm64_x86_64-simulator -name "*.swiftmodule" -o -name "*.swiftinterface" 2>/dev/null || echo "No Swift module interface found"
+          echo ""
+          echo "=== Check Modules directory ==="
+          ls -la Libbox.xcframework/ios-arm64_x86_64-simulator/Libbox.framework/Versions/A/Modules/
+
       - name: Build iOS Debug App
         id: build
         run: |
@@ -169,8 +187,11 @@ jobs:
             echo "build_status=succeeded" >> $GITHUB_OUTPUT
           else
             echo "❌ BUILD FAILED"
-            echo "Last 50 lines of build log:"
-            tail -50 build_output.log
+            echo "=== Error lines from build log ==="
+            grep -i "error:" build_output.log || echo "No 'error:' lines found"
+            echo ""
+            echo "=== Last 100 lines of build log ==="
+            tail -100 build_output.log
             echo "build_status=failed" >> $GITHUB_OUTPUT
             exit 1
           fi
