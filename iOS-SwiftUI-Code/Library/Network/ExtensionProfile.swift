@@ -1,5 +1,4 @@
 import Foundation
-import Libbox
 import NetworkExtension
 
 public class ExtensionProfile: ObservableObject {

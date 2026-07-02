@@ -1,5 +1,4 @@
 import Foundation
-import Libbox
 
 public class CommandClient: ObservableObject {
     public enum ConnectionType {

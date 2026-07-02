@@ -1,5 +1,4 @@
 import Foundation
-import Libbox
 import Network
 
 public class ProfileServer {

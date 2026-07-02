@@ -1,6 +1,5 @@
 import Foundation
 import GRDB
-import Libbox
 
 public extension Profile {
     nonisolated func updateRemoteProfile() async throws {
