@@ -87,6 +87,27 @@ jobs:
         run: |
           cd iOS-SwiftUI-Code
           xcodebuild -resolvePackageDependencies -project uuvpn.xcodeproj -scheme SFI
+      
+      - name: Verify Libbox framework exists
+        run: |
+          cd iOS-SwiftUI-Code
+          echo "Checking Libbox.xcframework..."
+          if [ -d "Libbox.xcframework" ]; then
+            echo "✅ Libbox.xcframework exists"
+            ls -lh Libbox.xcframework/
+            echo "Checking simulator variant..."
+            if [ -d "Libbox.xcframework/ios-arm64_x86_64-simulator" ]; then
+              echo "✅ Simulator variant exists"
+              ls -lh Libbox.xcframework/ios-arm64_x86_64-simulator/Libbox.framework/
+              file Libbox.xcframework/ios-arm64_x86_64-simulator/Libbox.framework/Versions/A/Libbox || echo "Binary file check"
+            else
+              echo "❌ Simulator variant NOT found!"
+              exit 1
+            fi
+          else
+            echo "❌ Libbox.xcframework NOT found!"
+            exit 1
+          fi
           
       - name: List available schemes
         run: |
