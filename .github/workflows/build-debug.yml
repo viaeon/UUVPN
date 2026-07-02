@@ -63,7 +63,7 @@ jobs:
   # ==================== iOS Debug 构建 ====================
   build-ios-debug:
     name: Build iOS Debug App
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
       - name: Checkout repository
@@ -75,7 +75,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: '15.0'
 
       - name: Show Xcode version
         run: |
@@ -94,7 +94,7 @@ jobs:
             -project uuvpn.xcodeproj \
             -scheme SFI \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,OS=26.5,name=iPhone Air' \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO
