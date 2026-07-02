@@ -5,7 +5,5 @@
 //  Bridging header for Libbox.xcframework
 //
 
-// Import Libbox Objective-C headers directly for Swift access
-#import "Libbox.objc.h"
-#import "Universe.objc.h"
-#import "ref.h"
+// Import Libbox framework header
+#import <Libbox/Libbox.h>
