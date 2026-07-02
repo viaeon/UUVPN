@@ -15,7 +15,6 @@ jobs:
   build-android-debug:
     name: Build Android Debug APK
     runs-on: ubuntu-latest
-    if: false  # 暂时禁用 Android 构建
 
     steps:
       - name: Checkout repository
