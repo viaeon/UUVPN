@@ -105,8 +105,6 @@ jobs:
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            -skipPackagePluginManifestValidation \
-            -skipMacroValidation \
             2>&1 | tee build_output.log
           
           # 检查构建结果
