@@ -517,7 +517,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C0E540162CA17EBF0054BC98 /* Libbox.xcframework in Frameworks */,
 				0451E1D62CC3AE2800E9A49F /* GRDB in Frameworks */,
 				3A7E90382A46778E00D53052 /* BinaryCodable in Frameworks */,
 				3AF3A3D22B2207F3001FD7C1 /* libresolv.tbd in Frameworks */,
@@ -1087,6 +1086,7 @@
 			);
 			name = Library;
 			packageProductDependencies = (
+				C0E540182CA17EC10054BC99 /* Libbox */,
 				3A7E90372A46778E00D53052 /* BinaryCodable */,
 				0451E1D52CC3AE2800E9A49F /* GRDB */,
 			);
@@ -2331,6 +2331,14 @@
 				minimumVersion = 4.5.0;
 			};
 		};
+		C0E540172CA17EC00054BC99 /* XCRemoteSwiftPackageReference "sing-box-lib" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/EbrahimTahernejad/sing-box-lib";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.11.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -2357,6 +2365,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C0DDD6422CB7E0F000AE1C0A /* XCRemoteSwiftPackageReference "lottie-ios" */;
 			productName = Lottie;
+		};
+		C0E540182CA17EC10054BC99 /* Libbox */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C0E540172CA17EC00054BC99 /* XCRemoteSwiftPackageReference "sing-box-lib" */;
+			productName = Libbox;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
