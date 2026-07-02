@@ -1,5 +1,6 @@
 import Foundation
 import NetworkExtension
+import Libbox
 
 open class ExtensionProvider: NEPacketTunnelProvider {
     public var username: String? = nil

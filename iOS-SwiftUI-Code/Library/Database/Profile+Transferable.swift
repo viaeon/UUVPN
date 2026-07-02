@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
+import Libbox
 
 public extension Profile {
     func toContent() throws -> LibboxProfileContent {

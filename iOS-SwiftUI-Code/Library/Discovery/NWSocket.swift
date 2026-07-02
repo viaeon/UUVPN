@@ -1,5 +1,6 @@
 import Foundation
 import Network
+import Libbox
 
 public class NWSocket {
     private let connection: NWConnection

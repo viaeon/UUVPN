@@ -1,4 +1,5 @@
 import Foundation
+import Libbox
 
 public class HTTPClient {
     private static var userAgent: String {

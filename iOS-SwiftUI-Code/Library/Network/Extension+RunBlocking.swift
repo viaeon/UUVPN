@@ -1,5 +1,6 @@
 import Foundation
 import NetworkExtension
+import Libbox
 
 func runBlocking<T>(_ block: @escaping () async -> T) -> T {
     let semaphore = DispatchSemaphore(value: 0)

@@ -1,5 +1,6 @@
 import Foundation
 import NetworkExtension
+import Libbox
 
 public class ExtensionProfile: ObservableObject {
     private let manager: NEVPNManager

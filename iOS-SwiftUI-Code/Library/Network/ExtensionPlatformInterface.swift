@@ -3,6 +3,7 @@ import NetworkExtension
 #if canImport(CoreWLAN)
     import CoreWLAN
 #endif
+import Libbox
 
 public class ExtensionPlatformInterface: NSObject, LibboxPlatformInterfaceProtocol, LibboxCommandServerHandlerProtocol {
     private let tunnel: ExtensionProvider
