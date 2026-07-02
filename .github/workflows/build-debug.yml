@@ -86,8 +86,15 @@ jobs:
         run: |
           cd iOS-SwiftUI-Code
           xcodebuild -resolvePackageDependencies -project uuvpn.xcodeproj -scheme SFI
-
-      - name: Build iOS Debug App
+          
+      - name: List available schemes
+        run: |
+          cd iOS-SwiftUI-Code
+          xcodebuild -list -project uuvpn.xcodeproj
+      
+      - name: Build iOS Debug App (attempt 1 - with verbose output)
+        id: build_attempt_1
+        continue-on-error: true
         run: |
           cd iOS-SwiftUI-Code
           xcodebuild clean build \
@@ -97,7 +104,19 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO
+            CODE_SIGNING_REQUIRED=NO \
+            -skipPackagePluginManifestValidation \
+            -skipMacroValidation \
+            2>&1 | tee build_output.log
+      
+      - name: Check if build succeeded
+        if: steps.build_attempt_1.outcome == 'failure'
+        run: |
+          echo "First build attempt failed. Trying alternative approach..."
+          cd iOS-SwiftUI-Code
+          # 尝试使用 xcpretty 获取更清晰的错误信息
+          cat build_output.log | grep -A 5 "error:" || echo "No specific error found in log"
+          exit 1
 
       - name: Find and upload iOS Debug App
         run: |
