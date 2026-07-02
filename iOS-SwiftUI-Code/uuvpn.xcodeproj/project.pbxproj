@@ -176,6 +176,7 @@
 		C0DDD67B2CB908B200AE1C0A /* 12c853b3.json in Resources */ = {isa = PBXBuildFile; fileRef = C0DDD67A2CB908B200AE1C0A /* 12c853b3.json */; };
 		C0DDD6922CB9110900AE1C0A /* View+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DDD6882CB9110900AE1C0A /* View+Extensions.swift */; };
 		C0E540152CA17EBF0054BC97 /* Libbox.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0E540142CA17EBF0054BC97 /* Libbox.xcframework */; };
+		C0E540162CA17EBF0054BC98 /* Libbox.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0E540142CA17EBF0054BC97 /* Libbox.xcframework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -516,6 +517,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0E540162CA17EBF0054BC98 /* Libbox.xcframework in Frameworks */,
 				0451E1D62CC3AE2800E9A49F /* GRDB in Frameworks */,
 				3A7E90382A46778E00D53052 /* BinaryCodable in Frameworks */,
 				3AF3A3D22B2207F3001FD7C1 /* libresolv.tbd in Frameworks */,
