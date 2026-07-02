@@ -374,7 +374,7 @@ data class PlanData (
     @SerializedName("speed_limit") val speed_limit : Long?,
     @SerializedName("device_limit") val device_limit : Int?,
     @SerializedName("show") val show : Boolean?,
-    @SerializedName("sell") val sell : Int?,
+    @SerializedName("sell") val sell : Boolean?,
     @SerializedName("sort") val sort : Int?,
     @SerializedName("renew") val renew : Boolean?,
     @SerializedName("content") val content : String?,
