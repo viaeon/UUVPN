@@ -88,7 +88,7 @@ jobs:
       - name: Pull Git LFS files
         run: |
           git lfs install
-          git lfs pull
+          git lfs pull || echo "LFS pull failed, continuing without LFS files (Android build doesn't need them)"
 
       - name: Install Java 17
         run: |
