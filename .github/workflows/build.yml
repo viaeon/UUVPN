@@ -92,7 +92,10 @@ jobs:
 
       - name: Install Java 17
         run: |
-          if command -v apt-get &> /dev/null; then
+          if command -v apk &> /dev/null; then
+            apk add --no-cache openjdk17
+            echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk" >> $GITHUB_ENV
+          elif command -v apt-get &> /dev/null; then
             apt-get update && apt-get install -y openjdk-17-jdk
             echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
           else
@@ -100,15 +103,19 @@ jobs:
             echo "JAVA_HOME=/toolcache/jdk-17.0.9+9" >> $GITHUB_ENV
             echo "/toolcache/jdk-17.0.9+9/bin" >> $GITHUB_PATH
           fi
+          java -version
 
       - name: Install Go 1.23
         run: |
-          if command -v apt-get &> /dev/null; then
+          if command -v apk &> /dev/null; then
+            apk add --no-cache go
+          elif command -v apt-get &> /dev/null; then
             apt-get update && apt-get install -y golang-go
           else
             curl -sL https://go.dev/dl/go1.23.0.linux-amd64.tar.gz | tar xz -C /toolcache
             echo "/toolcache/go/bin" >> $GITHUB_PATH
           fi
+          go version
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
