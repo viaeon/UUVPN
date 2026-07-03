@@ -22,10 +22,11 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-          lfs: true
 
-      - name: Git LFS Pull
-        run: git lfs pull
+      - name: Setup Git LFS
+        run: |
+          git lfs install
+          git lfs pull
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -75,6 +76,11 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+
+      - name: Setup Git LFS
+        run: |
+          git lfs install
+          git lfs pull
 
       - name: Verify Libbox framework before build
         run: |
