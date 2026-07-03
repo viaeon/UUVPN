@@ -17,16 +17,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Setup Node.js (required for actions)
+        run: |
+          curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+
+      - name: Setup Git LFS
+        run: |
+          sudo apt-get install -y git-lfs
+          git lfs install
+          git lfs pull
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
-
-      - name: Setup Git LFS
-        run: |
-          git lfs install
-          git lfs pull
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
