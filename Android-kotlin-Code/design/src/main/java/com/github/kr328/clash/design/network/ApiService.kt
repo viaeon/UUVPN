@@ -367,14 +367,14 @@ data class SubscribeData  (
 )
 
 data class PlanData (
-    @SerializedName("id") val id : Int,
+    @SerializedName("id") val id : Int?,
     @SerializedName("group_id") val group_id : Int?,
     @SerializedName("transfer_enable") val transfer_enable : Long?,
-    @SerializedName("name") val name : String,
+    @SerializedName("name") val name : String?,
     @SerializedName("speed_limit") val speed_limit : Long?,
     @SerializedName("device_limit") val device_limit : Int?,
     @SerializedName("show") val show : Boolean?,
-    @SerializedName("sell") val sell : Boolean?,
+    @SerializedName("sell") val sell : Any?,
     @SerializedName("sort") val sort : Int?,
     @SerializedName("renew") val renew : Boolean?,
     @SerializedName("content") val content : String?,
@@ -390,7 +390,16 @@ data class PlanData (
     @SerializedName("capacity_limit") val capacity_limit : Long?,
     @SerializedName("created_at") val created_at : Long?,
     @SerializedName("updated_at") val updated_at : Long?
-) : Serializable // 添加 Serializable 接口
+) : Serializable {
+    // 辅助属性：将 sell 转换为布尔值（兼容整数和布尔类型）
+    val isSell: Boolean
+        get() = when (sell) {
+            is Boolean -> sell as Boolean
+            is Number -> (sell as Number).toInt() != 0
+            null -> false
+            else -> false
+        }
+}
 
 
 
