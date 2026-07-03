@@ -59,6 +59,10 @@ jobs:
       - name: Install Java 17
         run: |
           if command -v apk &> /dev/null; then
+            # Enable community repository for openjdk17-jdk
+            sed -i 's/^#.*\/community\/.*$/\0/' /etc/apk/repositories || true
+            echo "https://dl-cdn.alpinelinux.org/alpine/latest-stable/community" >> /etc/apk/repositories
+            apk update
             apk add --no-cache openjdk17-jdk
             echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk" >> $GITHUB_ENV
           elif command -v apt-get &> /dev/null; then
