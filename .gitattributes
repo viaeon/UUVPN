@@ -1,1 +1,10 @@
+# Git LFS 配置 - iOS 大文件
+
+# Libbox.xcframework 二进制文件
+*.xcframework/**/*.framework/Versions/A/Libbox filter=lfs diff=lfs merge=lfs -text
+*.xcframework/**/*.framework/Libbox filter=lfs diff=lfs merge=lfs -text
+# 其他大型二进制文件
+*.a filter=lfs diff=lfs merge=lfs -text
+*.dylib filter=lfs diff=lfs merge=lfs -text
+*.framework/Versions/A/* filter=lfs diff=lfs merge=lfs -text
 iOS-SwiftUI-Code/Libbox.xcframework/** !text !filter !merge !diff
