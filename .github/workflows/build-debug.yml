@@ -20,17 +20,19 @@ jobs:
       options: --user root
 
     steps:
-      - name: Setup Git LFS
-        run: |
-          apt-get update && apt-get install -y git-lfs
-          git lfs install
-          git lfs pull
+      - name: Install Git LFS
+        run: apt-get update && apt-get install -y git-lfs
 
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
+
+      - name: Pull Git LFS files
+        run: |
+          git lfs install
+          git lfs pull
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
