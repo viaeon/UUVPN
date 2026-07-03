@@ -49,17 +49,14 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.build_android != 'false' }}
+    container:
+      image: node:20-bullseye
+      options: --user root
 
     steps:
-      - name: Setup Node.js (required for actions)
-        run: |
-          apt-get update && apt-get install -y curl sudo
-          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-          apt-get install -y nodejs
-
       - name: Setup Git LFS
         run: |
-          apt-get install -y git-lfs
+          apt-get update && apt-get install -y git-lfs
           git lfs install
           git lfs pull
 
