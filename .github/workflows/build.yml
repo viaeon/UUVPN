@@ -93,7 +93,7 @@ jobs:
       - name: Install Java 17
         run: |
           if command -v apk &> /dev/null; then
-            apk add --no-cache openjdk17
+            apk add --no-cache openjdk17-jdk
             echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk" >> $GITHUB_ENV
           elif command -v apt-get &> /dev/null; then
             apt-get update && apt-get install -y openjdk-17-jdk
