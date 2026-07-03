@@ -47,7 +47,7 @@ jobs:
   # ==================== Android 构建 ====================
   build-android:
     name: Build Android APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu
     if: ${{ github.event.inputs.build_android != 'false' }}
     container:
       image: node:20-bullseye
