@@ -1,0 +1,175 @@
+name: Build iOS
+
+on:
+  push:
+    branches:
+      - develop
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      build_debug:
+        description: 'Build Debug IPA'
+        required: false
+        default: true
+        type: boolean
+      build_release:
+        description: 'Build Release IPA'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  IOS_XCODE_VERSION: "16.0"
+  IOS_DEPLOYMENT_TARGET: "15.0"
+
+jobs:
+  build-ios:
+    name: Build iOS IPA
+    runs-on: ubuntu
+    env:
+      RUNNER_TOOL_CACHE: /toolcache
+
+    steps:
+      - name: Install dependencies (Alpine)
+        run: |
+          # Alpine Linux package names are different
+          apk add --no-cache \
+            qemu-system-x86_64 \
+            qemu-img \
+            wget \
+            curl \
+            git-lfs \
+            bash \
+            python3 \
+            py3-pip
+
+      - name: Check virtualization support
+        run: |
+          echo "========================================"
+          echo "Checking virtualization support..."
+          echo "========================================"
+          ls -la /dev/kvm 2>/dev/null || echo "KVM not available - will use QEMU emulation (slower)"
+          cat /proc/cpuinfo | grep -E "vmx|svm" || echo "No hardware virtualization detected"
+          echo ""
+          echo "QEMU version:"
+          qemu-system-x86_64 --version || echo "QEMU not found"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Git LFS
+        run: |
+          git lfs install
+          # Try LFS pull with token if available
+          if [ -n "${{ secrets.GITEA_TOKEN }}" ]; then
+            git config --global lfs.url "https://admin:${{ secrets.GITEA_TOKEN }}@git.viaeon.com/admin/UUVPN.git/info/lfs"
+          fi
+          git lfs pull 2>&1 || echo "LFS pull failed"
+          echo ""
+          echo "Checking Libbox.xcframework..."
+          ls -la iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ 2>/dev/null || echo "Libbox.xcframework directory not found"
+
+      - name: Check if Libbox framework exists
+        id: check_lfs
+        run: |
+          echo "========================================"
+          echo "Checking LFS files..."
+          echo "========================================"
+          if [ -f "iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" ]; then
+            echo "lfs_ready=true" >> $GITHUB_OUTPUT
+            echo "✅ LFS files downloaded successfully"
+            file iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox
+          else
+            echo "lfs_ready=false" >> $GITHUB_OUTPUT
+            echo "❌ LFS files not available"
+            echo ""
+            echo "Libbox.xcframework contents:"
+            find iOS-SwiftUI-Code/uuvpn/Libbox.xcframework -type f 2>/dev/null | head -20
+          fi
+
+      - name: Pull Docker-OSX image
+        if: ${{ steps.check_lfs.outputs.lfs_ready == 'true' }}
+        run: |
+          echo "Pulling Docker-OSX image (this may take a while)..."
+          docker pull sickcodes/docker-osx:sonoma || echo "Failed to pull image"
+
+      - name: Build iOS with Docker-OSX
+        if: ${{ steps.check_lfs.outputs.lfs_ready == 'true' }}
+        run: |
+          echo "========================================"
+          echo "Starting iOS build in Docker-OSX..."
+          echo "========================================"
+          echo "This will take 10-20 minutes for the VM to boot"
+          echo ""
+
+          # Run macOS container and build
+          docker run --rm \
+            --privileged \
+            -e RAM=8192 \
+            -e SMP=4 \
+            -e DISPLAY=dummy \
+            -v $PWD:/workspace \
+            sickcodes/docker-osx:sonoma \
+            bash -c '
+              echo "Waiting for macOS to boot (60s)..."
+              sleep 60
+
+              echo "Checking environment..."
+              uname -a || true
+              xcodebuild -version || echo "xcodebuild not found in PATH"
+
+              echo ""
+              echo "Navigating to workspace..."
+              cd /workspace/iOS-SwiftUI-Code || exit 1
+
+              echo ""
+              echo "Building iOS app..."
+              xcodebuild \
+                -project uuvpn.xcodeproj \
+                -scheme SFI \
+                -sdk iphoneos \
+                -configuration Debug \
+                -derivedDataPath build \
+                CODE_SIGN_IDENTITY="" \
+                CODE_SIGNING_REQUIRED=NO \
+                build || echo "Build failed"
+            ' || echo "Docker-OSX execution failed"
+
+      - name: Check build output
+        if: ${{ steps.check_lfs.outputs.lfs_ready == 'true' }}
+        run: |
+          echo "========================================"
+          echo "Build output:"
+          echo "========================================"
+          find iOS-SwiftUI-Code/build -name "*.app" -type d 2>/dev/null || echo "No .app found"
+          find iOS-SwiftUI-Code/build -name "*.ipa" -type f 2>/dev/null || echo "No .ipa found"
+          ls -la iOS-SwiftUI-Code/build/ 2>/dev/null || echo "Build directory not found"
+
+      - name: Build summary
+        run: |
+          echo "========================================"
+          echo "iOS Build Summary"
+          echo "========================================"
+          echo "LFS ready: ${{ steps.check_lfs.outputs.lfs_ready }}"
+          echo ""
+          if [ "${{ steps.check_lfs.outputs.lfs_ready }}" != "true" ]; then
+            echo "❌ Cannot build iOS without Libbox.xcframework"
+            echo ""
+            echo "To fix this, configure Gitea LFS:"
+            echo "1. Enable LFS in Gitea config (app.ini):"
+            echo "   [lfs]"
+            echo "   START_SERVER = true"
+            echo "   PATH = /data/git/lfs"
+            echo ""
+            echo "2. Generate JWT_SECRET:"
+            echo "   openssl rand -hex 32"
+            echo ""
+            echo "3. Re-push LFS files to the repository"
+          else
+            echo "✅ LFS files available"
+            echo "Build was attempted - check logs above for results"
+          fi

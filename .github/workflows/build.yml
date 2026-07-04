@@ -48,7 +48,8 @@ jobs:
   build-android:
     name: Build Android APK
     runs-on: ubuntu
-    if: ${{ github.event.inputs.build_android != 'false' }}
+    # 暂时禁用 Android 构建，使用 build-android.yml
+    if: ${{ false && github.event.inputs.build_android != 'false' }}
     env:
       RUNNER_TOOL_CACHE: /toolcache
 
@@ -211,93 +212,14 @@ jobs:
           find . -name "*.apk" -type f -exec mv {} "${{ steps.apk_name.outputs.apk_name }}" \;
 
   # ==================== iOS 构建 (Docker-OSX) ====================
+  # 已移至 build-ios.yml
   build-ios:
     name: Build iOS IPA
     runs-on: ubuntu
-    if: ${{ github.event.inputs.build_ios != 'false' }}
-
+    if: ${{ false }}
     steps:
-      - name: Install dependencies
-        run: |
-          if command -v apk &> /dev/null; then
-            apk add --no-cache qemu-utils wget git-lfs curl
-          else
-            apt-get update && apt-get install -y qemu-utils wget git-lfs curl
-          fi
-
-      - name: Check virtualization support
-        run: |
-          echo "Checking virtualization support..."
-          ls -la /dev/kvm || echo "KVM not available - will use QEMU emulation"
-          cat /proc/cpuinfo | grep -E "vmx|svm" || echo "No hardware virtualization detected"
-
-      - name: Download macOS base image
-        run: |
-          echo "Downloading macOS base image..."
-          mkdir -p /tmp/osx
-          # Use a pre-built macOS image with Xcode
-          wget -q --show-progress "https://images.sick.codes/osx-kvm/mac_os_x_13_high_sierra.iso" -O /tmp/osx/macos.iso || \
-            echo "Download failed - will skip actual build"
-          ls -la /tmp/osx/ || true
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          fetch-depth: 0
-
-      - name: Setup Git LFS
-        run: |
-          git lfs install
-          git config --global lfs.url "https://admin:${{ secrets.GITEA_TOKEN }}@git.viaeon.com/admin/UUVPN.git/info/lfs"
-          git lfs pull || echo "LFS pull failed - checking if framework exists"
-          ls -la iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ || echo "Libbox.xcframework not found"
-
-      - name: Check if Libbox framework exists
-        id: check_lfs
-        run: |
-          if [ -f "iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" ]; then
-            echo "lfs_ready=true" >> $GITHUB_OUTPUT
-            echo "LFS files downloaded successfully"
-          else
-            echo "lfs_ready=false" >> $GITHUB_OUTPUT
-            echo "LFS files not available - cannot build iOS"
-          fi
-
-      - name: Build iOS with Docker-OSX (if LFS ready)
-        if: ${{ steps.check_lfs.outputs.lfs_ready == 'true' }}
-        run: |
-          echo "Starting macOS container for iOS build..."
-          # Mount repository and build
-          docker run --rm \
-            --privileged \
-            -e RAM=8192 \
-            -e SMP=4 \
-            -v $PWD:/workspace \
-            sickcodes/docker-osx:sonoma \
-            bash -c "
-              echo 'Waiting for macOS to boot...'
-              sleep 60
-              echo 'Checking Xcode...'
-              xcodebuild -version || echo 'Xcode not installed'
-              echo 'Building iOS app...'
-              cd /workspace/iOS-SwiftUI-Code
-              xcodebuild -project uuvpn.xcodeproj -scheme SFI -sdk iphoneos -configuration Debug build
-            " || echo "Docker-OSX build failed or not available"
-
-      - name: iOS build status
-        run: |
-          echo "========================================"
-          echo "iOS Build Summary"
-          echo "========================================"
-          echo "LFS files ready: ${{ steps.check_lfs.outputs.lfs_ready }}"
-          echo ""
-          if [ "${{ steps.check_lfs.outputs.lfs_ready }}" != "true" ]; then
-            echo "Cannot build iOS without Libbox.xcframework"
-            echo "Please ensure Gitea LFS is properly configured"
-          else
-            echo "Build attempted - check logs above for details"
-          fi
+      - name: Disabled
+        run: echo "iOS build moved to build-ios.yml"
 
   # ==================== 发布到 GitHub Releases ====================
   release:
