@@ -72,14 +72,21 @@ jobs:
       - name: Setup Git LFS
         run: |
           git lfs install
-          # Try LFS pull with token if available
-          if [ -n "${{ secrets.GITEA_TOKEN }}" ]; then
-            git config --global lfs.url "https://admin:${{ secrets.GITEA_TOKEN }}@git.viaeon.com/admin/UUVPN.git/info/lfs"
-          fi
-          git lfs pull 2>&1 || echo "LFS pull failed"
+
+          # 配置 LFS 认证 - 使用 token 直接认证
+          git config --global lfs.url "https://admin:73ffc0f4391a26bb327fbed379d63b5a087e5f10@git.viaeon.com/admin/UUVPN.git/info/lfs"
+
+          echo "Attempting LFS pull..."
+          git lfs pull --verbose 2>&1 || echo "LFS pull failed"
+
           echo ""
           echo "Checking Libbox.xcframework..."
           ls -la iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ 2>/dev/null || echo "Libbox.xcframework directory not found"
+
+          # 检查文件是否是 LFS 指针文件
+          echo ""
+          echo "Checking if files are LFS pointers or actual binaries..."
+          head -5 iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null || echo "Cannot read file"
 
       - name: Check if Libbox framework exists
         id: check_lfs
