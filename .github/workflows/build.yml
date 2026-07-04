@@ -166,19 +166,19 @@ jobs:
         if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/develop' }}
         run: |
           cd Android-kotlin-Code
-          ./gradlew app:assembleDebug --stacktrace
+          ./gradlew assembleAlphaDebug --stacktrace
 
       - name: Build Android Release APK
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
           cd Android-kotlin-Code
-          ./gradlew app:assembleRelease --stacktrace
+          ./gradlew assembleAlphaRelease --stacktrace
 
       - name: Build Android APK (Default)
         if: ${{ github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/v') && github.ref != 'refs/heads/develop' }}
         run: |
           cd Android-kotlin-Code
-          ./gradlew app:assembleRelease --stacktrace
+          ./gradlew assembleAlphaRelease --stacktrace
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
