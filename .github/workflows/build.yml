@@ -199,6 +199,10 @@ jobs:
             APK_NAME="UUVPN-Android-${{ github.sha }}.apk"
           fi
           echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
+          # Find the APK file
+          APK_PATH=$(find Android-kotlin-Code/app/build/outputs/apk -name "*.apk" -type f | head -1)
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "Found APK: $APK_PATH"
 
       - name: Rename APK for release
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}

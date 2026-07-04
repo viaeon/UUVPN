@@ -109,12 +109,18 @@ jobs:
           cd Android-kotlin-Code
           ./gradlew app:assembleDebug --stacktrace
 
-      - name: Upload Android Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-debug-apk
-          path: Android-kotlin-Code/app/build/outputs/apk/**/*.apk
-          retention-days: 7
+      - name: List APK files
+        run: |
+          echo "Listing APK files..."
+          find Android-kotlin-Code/app/build/outputs/apk -name "*.apk" -type f || echo "No APK files found"
+          ls -la Android-kotlin-Code/app/build/outputs/apk/ || true
+
+      - name: Copy APK to artifacts
+        run: |
+          mkdir -p /tmp/artifacts
+          find Android-kotlin-Code/app/build/outputs/apk -name "*.apk" -type f -exec cp {} /tmp/artifacts/ \;
+          ls -la /tmp/artifacts/
+          echo "APK files copied to /tmp/artifacts"
 
   # ==================== iOS Debug 构建 ====================
   build-ios-debug:
