@@ -210,13 +210,33 @@ jobs:
           cd Android-kotlin-Code/app/build/outputs/apk
           find . -name "*.apk" -type f -exec mv {} "${{ steps.apk_name.outputs.apk_name }}" \;
 
-  # ==================== iOS 构建 ====================
+  # ==================== iOS 构建 (Docker-OSX) ====================
   build-ios:
     name: Build iOS IPA
-    runs-on: macos-latest
+    runs-on: ubuntu
     if: ${{ github.event.inputs.build_ios != 'false' }}
 
     steps:
+      - name: Check KVM support
+        run: |
+          echo "Checking virtualization support..."
+          ls -la /dev/kvm || echo "KVM not available"
+          cat /proc/cpuinfo | grep -E "vmx|svm" || echo "No hardware virtualization support"
+
+      - name: Pull macOS Docker image
+        run: |
+          docker pull sickcodes/docker-osx:latest || echo "Failed to pull macOS image"
+
+      - name: Run macOS container (test)
+        run: |
+          # This is a test run - full build requires more setup
+          docker run --rm \
+            --privileged \
+            -e RAM=8192 \
+            -e SMP=4 \
+            sickcodes/docker-osx:latest \
+            bash -c "echo 'macOS container started'; uname -a" || echo "Docker-OSX requires privileged mode and KVM support"
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -225,134 +245,36 @@ jobs:
 
       - name: Setup Git LFS
         run: |
-          brew install git-lfs || true
+          if command -v apk &> /dev/null; then
+            apk add --no-cache git-lfs
+          else
+            apt-get update && apt-get install -y git-lfs
+          fi
           git lfs install
-          # Configure LFS authentication with token
           git config --global lfs.url "https://admin:${{ secrets.GITEA_TOKEN }}@git.viaeon.com/admin/UUVPN.git/info/lfs"
-          git lfs pull || echo "LFS pull failed, checking if files exist..."
-          # Check if LFS files are pulled correctly
-          ls -la iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox || echo "LFS file not found"
+          git lfs pull || echo "LFS pull failed"
+          ls -la iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ || echo "LFS files not found"
 
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: ${{ env.IOS_XCODE_VERSION }}
-
-      - name: Show Xcode version
+      - name: Build iOS (placeholder)
         run: |
-          xcodebuild -version
-          swift --version
-
-      - name: Install Apple Certificate
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: apple-actions/import-codesign-certs@v2
-        with:
-          p12-file-base64: ${{ secrets.IOS_CERTIFICATES_P12 }}
-          p12-password: ${{ secrets.IOS_CERTIFICATES_PASSWORD }}
-
-      - name: Install Provisioning Profile
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/uuvpn.mobileprovision
-
-      - name: Resolve Swift Package Dependencies
-        run: |
-          cd iOS-SwiftUI-Code
-          xcodebuild -resolvePackageDependencies -project uuvpn.xcodeproj -scheme SFI | xcpretty
-
-      - name: Build iOS App (Debug)
-        if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/develop' }}
-        run: |
-          cd iOS-SwiftUI-Code
-          xcodebuild clean build \
-            -project uuvpn.xcodeproj \
-            -scheme SFI \
-            -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
-            -configuration Debug \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            | xcpretty
-
-      - name: Build and Archive iOS App (Release)
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        run: |
-          cd iOS-SwiftUI-Code
-          xcodebuild clean archive \
-            -project uuvpn.xcodeproj \
-            -scheme SFI \
-            -sdk iphoneos \
-            -configuration Release \
-            -archivePath build/UUVPN.xcarchive \
-            CODE_SIGN_IDENTITY="${{ secrets.IOS_SIGNING_IDENTITY }}" \
-            PROVISIONING_PROFILE_SPECIFIER="uuvpn" \
-            | xcpretty
-
-      - name: Create ExportOptions.plist
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        run: |
-          cd iOS-SwiftUI-Code
-          cat > ExportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>${{ secrets.IOS_TEAM_ID }}</string>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>compileBitcode</key>
-            <false/>
-          </dict>
-          </plist>
-          EOF
-
-      - name: Export IPA
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        run: |
-          cd iOS-SwiftUI-Code
-          xcodebuild -exportArchive \
-            -archivePath build/UUVPN.xcarchive \
-            -exportPath build/ipa \
-            -exportOptionsPlist ExportOptions.plist \
-            | xcpretty
-
-      - name: Upload iOS IPA Artifact
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-ipa-${{ github.sha }}
-          path: iOS-SwiftUI-Code/build/ipa/*.ipa
-          retention-days: 30
-
-      - name: Upload iOS App Artifact (Debug)
-        if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/develop' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-app-debug-${{ github.sha }}
-          path: iOS-SwiftUI-Code/build/**/*.app
-          retention-days: 7
-
-      - name: Get IPA filename
-        id: ipa_name
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        run: |
-          IPA_NAME="UUVPN-iOS-${{ github.ref_name }}.ipa"
-          echo "ipa_name=$IPA_NAME" >> $GITHUB_OUTPUT
-
-      - name: Rename IPA for release
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        run: |
-          cd iOS-SwiftUI-Code/build/ipa
-          find . -name "*.ipa" -type f -exec mv {} "${{ steps.ipa_name.outputs.ipa_name }}" \;
+          echo "iOS build in Docker-OSX requires:"
+          echo "1. KVM support on the host"
+          echo "2. Docker privileged mode"
+          echo "3. At least 8GB RAM"
+          echo "4. macOS VM with Xcode installed"
+          echo ""
+          echo "Current environment:"
+          docker info || true
+          echo ""
+          echo "To enable iOS builds, either:"
+          echo "- Add a macOS runner to your Gitea instance"
+          echo "- Use GitHub Actions hosted macOS runners"
+          echo "- Configure Docker-OSX with persistent storage"
 
   # ==================== 发布到 GitHub Releases ====================
   release:
     name: Create GitHub Release
-    needs: [build-android, build-ios]
+    needs: [build-android]
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
 
@@ -365,12 +287,6 @@ jobs:
         with:
           name: android-apk-${{ github.sha }}
           path: artifacts/android
-
-      - name: Download iOS IPA
-        uses: actions/download-artifact@v4
-        with:
-          name: ios-ipa-${{ github.sha }}
-          path: artifacts/ios
 
       - name: Get version from tag
         id: get_version
@@ -423,31 +339,8 @@ jobs:
           prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') }}
           files: |
             artifacts/android/*.apk
-            artifacts/ios/*.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # ==================== 上传到 TestFlight (iOS) ====================
-  upload-testflight:
-    name: Upload to TestFlight
-    needs: [build-ios]
-    runs-on: macos-latest
-    if: ${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, 'alpha') }}
-
-    steps:
-      - name: Download iOS IPA
-        uses: actions/download-artifact@v4
-        with:
-          name: ios-ipa-${{ github.sha }}
-          path: artifacts/ios
-
-      - name: Upload to TestFlight
-        uses: apple-actions/upload-testflight-build@v1
-        with:
-          app-path: artifacts/ios/*.ipa
-          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
 
   # ==================== 清理旧构建产物 ====================
   cleanup:
