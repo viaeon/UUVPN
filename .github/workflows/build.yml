@@ -225,8 +225,13 @@ jobs:
 
       - name: Setup Git LFS
         run: |
+          brew install git-lfs || true
           git lfs install
-          git lfs pull
+          # Configure LFS authentication with token
+          git config --global lfs.url "https://admin:${{ secrets.GITEA_TOKEN }}@git.viaeon.com/admin/UUVPN.git/info/lfs"
+          git lfs pull || echo "LFS pull failed, checking if files exist..."
+          # Check if LFS files are pulled correctly
+          ls -la iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox || echo "LFS file not found"
 
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
