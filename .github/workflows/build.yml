@@ -48,35 +48,28 @@ jobs:
   build-android:
     name: Build Android APK
     runs-on: ubuntu
+    container: ubuntu:22.04
     if: ${{ github.event.inputs.build_android != 'false' }}
     env:
       RUNNER_TOOL_CACHE: /toolcache
+      DEBIAN_FRONTEND: noninteractive
 
     steps:
-      - name: Install Node.js
+      - name: Install dependencies
         run: |
-          export PATH="/toolcache/bin:$PATH"
-          if ! command -v node &> /dev/null; then
-            if command -v apk &> /dev/null; then
-              apk add --no-cache nodejs npm
-            else
-              curl -fsSL https://nodejs.org/dist/v20.0.0/node-v20.0.0-linux-x64.tar.xz | tar -xJ -C /tmp
-              mkdir -p /toolcache
-              cp -r /tmp/node-v20.0.0-linux-x64/{bin,lib,share} /toolcache/
-            fi
-          fi
-          node --version
+          apt-get update
+          apt-get install -y curl git git-lfs openjdk-17-jdk unzip
+          mkdir -p /toolcache
 
-      - name: Install Git LFS
+      - name: Install Go 1.23
         run: |
-          if command -v apk &> /dev/null; then
-            apk add --no-cache git-lfs
-          elif command -v apt-get &> /dev/null; then
-            apt-get update && apt-get install -y git-lfs
-          else
-            curl -sL https://github.com/git-lfs/git-lfs/releases/download/v3.5.1/git-lfs-linux-amd64-v3.5.1.tar.gz | tar xz -C /tmp
-            mv /tmp/git-lfs-3.5.1/git-lfs /toolcache/bin/
-          fi
+          curl -sL https://go.dev/dl/go1.23.0.linux-amd64.tar.gz | tar xz -C /toolcache
+          echo "/toolcache/go/bin" >> $GITHUB_PATH
+          echo "GOROOT=/toolcache/go" >> $GITHUB_ENV
+          /toolcache/go/bin/go version
+
+      - name: Setup environment
+        run: |
           git lfs install
 
       - name: Checkout repository
@@ -87,43 +80,12 @@ jobs:
 
       - name: Pull Git LFS files
         run: |
-          git lfs install
           git lfs pull || echo "LFS pull failed, continuing without LFS files (Android build doesn't need them)"
 
-      - name: Install Java 17
+      - name: Setup Java environment
         run: |
-          if command -v apk &> /dev/null; then
-            # Enable community repository for openjdk17-jdk
-            sed -i 's/^#.*\/community\/.*$/\0/' /etc/apk/repositories || true
-            echo "https://dl-cdn.alpinelinux.org/alpine/latest-stable/community" >> /etc/apk/repositories
-            apk update
-            apk add --no-cache openjdk17-jdk
-            echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk" >> $GITHUB_ENV
-          elif command -v apt-get &> /dev/null; then
-            apt-get update && apt-get install -y openjdk-17-jdk
-            echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-          else
-            curl -sL https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz | tar xz -C /toolcache
-            echo "JAVA_HOME=/toolcache/jdk-17.0.9+9" >> $GITHUB_ENV
-            echo "/toolcache/jdk-17.0.9+9/bin" >> $GITHUB_PATH
-          fi
+          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
           java -version
-
-      - name: Install Go 1.23
-        run: |
-          # Create toolcache directory if not exists
-          mkdir -p /toolcache
-          # Install curl if not available (Alpine uses apk)
-          if ! command -v curl &> /dev/null; then
-            if command -v apk &> /dev/null; then
-              apk add --no-cache curl
-            fi
-          fi
-          # Download Go 1.23 directly to ensure correct version
-          curl -sL https://go.dev/dl/go1.23.0.linux-amd64.tar.gz | tar xz -C /toolcache
-          echo "/toolcache/go/bin" >> $GITHUB_PATH
-          echo "GOROOT=/toolcache/go" >> $GITHUB_ENV
-          /toolcache/go/bin/go version
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
