@@ -33,16 +33,24 @@ jobs:
     steps:
       - name: Install dependencies (Alpine)
         run: |
-          # Alpine Linux package names are different
+          # 添加 community 仓库
+          echo "https://dl-cdn.alpinelinux.org/alpine/latest-stable/community" >> /etc/apk/repositories
+          apk update
+
+          # 安装基础依赖，不安装完整的 qemu（依赖太多）
           apk add --no-cache \
-            qemu-system-x86_64 \
-            qemu-img \
             wget \
             curl \
             git-lfs \
             bash \
             python3 \
-            py3-pip
+            py3-pip \
+            docker \
+            openrc
+
+          # 启动 docker 服务
+          rc-service docker start || true
+          docker --version || echo "Docker not available"
 
       - name: Check virtualization support
         run: |
@@ -52,8 +60,8 @@ jobs:
           ls -la /dev/kvm 2>/dev/null || echo "KVM not available - will use QEMU emulation (slower)"
           cat /proc/cpuinfo | grep -E "vmx|svm" || echo "No hardware virtualization detected"
           echo ""
-          echo "QEMU version:"
-          qemu-system-x86_64 --version || echo "QEMU not found"
+          echo "Docker version:"
+          docker --version || echo "Docker not found"
 
       - name: Checkout repository
         uses: actions/checkout@v4
