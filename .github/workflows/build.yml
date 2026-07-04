@@ -342,47 +342,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # ==================== 清理旧构建产物 ====================
-  cleanup:
-    name: Cleanup old artifacts
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' }}
-
-    steps:
-      - name: Delete old artifacts
-        uses: c-hive/gha-remove-artifacts@v1
-        with:
-          age: '30 days'
-          skip-recent: 5
-
   # ==================== 通知 ====================
   notify:
     name: Send Notification
-    needs: [build-android, build-ios]
-    runs-on: ubuntu-latest
+    needs: [build-android]
+    runs-on: ubuntu
     if: ${{ always() && github.event_name == 'push' }}
 
     steps:
       - name: Send Telegram Notification
-        uses: appleboy/telegram-action@master
-        if: ${{ env.TELEGRAM_BOT_TOKEN != '' }}
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: markdown
-          message: |
-            *UUVPN Build Notification*
-
-            📦 **Repository**: ${{ github.repository }}
-            🌿 **Branch**: ${{ github.ref_name }}
-            🔄 **Commit**: ${{ github.sha }}
-            ✅ **Status**:
-            - Android: ${{ needs.build-android.result }}
-            - iOS: ${{ needs.build-ios.result }}
-
-            👤 **Author**: ${{ github.actor }}
-            💬 **Message**: ${{ github.event.head_commit.message }}
-
-            [View Build](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        if: ${{ secrets.TELEGRAM_BOT_TOKEN != '' }}
+        run: |
+          echo "Telegram notification would be sent here"
+          echo "Build status: ${{ needs.build-android.result }}"
