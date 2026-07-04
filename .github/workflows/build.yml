@@ -182,14 +182,21 @@ jobs:
           cd Android-kotlin-Code
           ./gradlew assembleAlphaRelease --stacktrace
 
+      - name: List APK files
+        run: |
+          echo "Listing APK files..."
+          find Android-kotlin-Code/app/build/outputs/apk -name "*.apk" -type f || echo "No APK files found"
+          ls -la Android-kotlin-Code/app/build/outputs/apk/ || true
+
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk-${{ github.sha }}
           path: |
-            Android-kotlin-Code/app/build/outputs/apk/**/*.apk
-            Android-kotlin-Code/app/build/outputs/apk/**/*.json
+            Android-kotlin-Code/app/build/outputs/apk/alpha/debug/*.apk
+            Android-kotlin-Code/app/build/outputs/apk/alpha/release/*.apk
           retention-days: 30
+          if-no-files-found: warn
 
       - name: Get APK filename
         id: apk_name
