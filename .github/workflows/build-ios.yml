@@ -77,16 +77,36 @@ jobs:
           git config --global lfs.url "https://admin:73ffc0f4391a26bb327fbed379d63b5a087e5f10@git.viaeon.com/admin/UUVPN.git/info/lfs"
 
           echo "Attempting LFS pull..."
-          git lfs pull --verbose 2>&1 || echo "LFS pull failed"
+          git lfs pull 2>&1 || echo "LFS pull failed, trying alternative methods..."
+
+          # 如果 LFS pull 失败，尝试直接 fetch 和 checkout
+          git lfs fetch origin 2>&1 || echo "LFS fetch failed"
+          git lfs checkout 2>&1 || echo "LFS checkout failed"
 
           echo ""
           echo "Checking Libbox.xcframework..."
-          ls -la iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ 2>/dev/null || echo "Libbox.xcframework directory not found"
+          ls -la iOS-SwiftUI-Code/uuvpn/ 2>/dev/null || echo "uuvpn directory not found"
+
+          # 检查 Libbox.xcframework 目录
+          if [ -d "iOS-SwiftUI-Code/uuvpn/Libbox.xcframework" ]; then
+            echo "Libbox.xcframework directory exists"
+            ls -la iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/
+          else
+            echo "Libbox.xcframework directory NOT found"
+            # 检查是否有 LFS 指针文件
+            cat iOS-SwiftUI-Code/uuvpn/.gitattributes 2>/dev/null || echo "No .gitattributes"
+          fi
 
           # 检查文件是否是 LFS 指针文件
           echo ""
           echo "Checking if files are LFS pointers or actual binaries..."
-          head -5 iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null || echo "Cannot read file"
+          if [ -f "iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" ]; then
+            head -5 iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null
+          else
+            echo "File not found at expected path"
+            # 搜索所有可能的 Libbox 文件
+            find iOS-SwiftUI-Code -name "Libbox" -type f 2>/dev/null || echo "No Libbox files found"
+          fi
 
       - name: Check if Libbox framework exists
         id: check_lfs
