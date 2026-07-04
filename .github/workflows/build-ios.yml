@@ -138,7 +138,7 @@ jobs:
         if: ${{ steps.check_lfs.outputs.lfs_ready == 'true' }}
         run: |
           echo "Pulling Docker-OSX image (this may take a while)..."
-          docker pull sickcodes/docker-osx:sonoma || echo "Failed to pull image"
+          docker pull sickcodes/docker-osx:latest || echo "Failed to pull image"
 
       - name: Build iOS with Docker-OSX
         if: ${{ steps.check_lfs.outputs.lfs_ready == 'true' }}
@@ -156,7 +156,7 @@ jobs:
             -e SMP=4 \
             -e DISPLAY=dummy \
             -v $PWD:/workspace \
-            sickcodes/docker-osx:sonoma \
+            sickcodes/docker-osx:latest \
             bash -c '
               echo "Waiting for macOS to boot (60s)..."
               sleep 60
