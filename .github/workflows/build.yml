@@ -219,7 +219,11 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          apt-get update && apt-get install -y qemu-utils wget
+          if command -v apk &> /dev/null; then
+            apk add --no-cache qemu-utils wget git-lfs curl
+          else
+            apt-get update && apt-get install -y qemu-utils wget git-lfs curl
+          fi
 
       - name: Check virtualization support
         run: |
@@ -244,7 +248,6 @@ jobs:
 
       - name: Setup Git LFS
         run: |
-          apt-get update && apt-get install -y git-lfs
           git lfs install
           git config --global lfs.url "https://admin:${{ secrets.GITEA_TOKEN }}@git.viaeon.com/admin/UUVPN.git/info/lfs"
           git lfs pull || echo "LFS pull failed - checking if framework exists"
