@@ -85,27 +85,27 @@ jobs:
 
           echo ""
           echo "Checking Libbox.xcframework..."
-          ls -la iOS-SwiftUI-Code/uuvpn/ 2>/dev/null || echo "uuvpn directory not found"
+          ls -la iOS-SwiftUI-Code/Libbox.xcframework/ 2>/dev/null || echo "Libbox.xcframework directory not found"
 
           # 检查 Libbox.xcframework 目录
-          if [ -d "iOS-SwiftUI-Code/uuvpn/Libbox.xcframework" ]; then
+          if [ -d "iOS-SwiftUI-Code/Libbox.xcframework" ]; then
             echo "Libbox.xcframework directory exists"
-            ls -la iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/
+            ls -la iOS-SwiftUI-Code/Libbox.xcframework/
           else
             echo "Libbox.xcframework directory NOT found"
             # 检查是否有 LFS 指针文件
-            cat iOS-SwiftUI-Code/uuvpn/.gitattributes 2>/dev/null || echo "No .gitattributes"
+            cat iOS-SwiftUI-Code/.gitattributes 2>/dev/null || echo "No .gitattributes"
           fi
 
           # 检查文件是否是 LFS 指针文件
           echo ""
           echo "Checking if files are LFS pointers or actual binaries..."
-          if [ -f "iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" ]; then
-            head -5 iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null
+          if [ -f "iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" ]; then
+            head -5 iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null
           else
             echo "File not found at expected path"
             # 搜索所有可能的 Libbox 文件
-            find iOS-SwiftUI-Code -name "Libbox" -type f 2>/dev/null || echo "No Libbox files found"
+            find iOS-SwiftUI-Code -name "Libbox" -type f 2>/dev/null | head -10 || echo "No Libbox files found"
           fi
 
       - name: Check if Libbox framework exists
@@ -115,15 +115,15 @@ jobs:
           echo "Checking LFS files..."
           echo "========================================"
 
-          # 列出 Libbox.xcframework 目录内容
+          # 正确路径: iOS-SwiftUI-Code/Libbox.xcframework (不是 uuvpn/Libbox.xcframework)
           echo "Libbox.xcframework contents:"
-          ls -la iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ 2>/dev/null || echo "Directory not found or empty"
+          ls -la iOS-SwiftUI-Code/Libbox.xcframework/ 2>/dev/null || echo "Directory not found or empty"
 
           # 检查关键文件
-          if [ -f "iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" ]; then
+          if [ -f "iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" ]; then
             echo "lfs_ready=true" >> $GITHUB_OUTPUT
             echo "✅ LFS files downloaded successfully"
-            file iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null || true
+            file iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null || true
           else
             echo "lfs_ready=false" >> $GITHUB_OUTPUT
             echo "❌ LFS files not available"
