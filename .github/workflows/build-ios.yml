@@ -87,17 +87,25 @@ jobs:
           echo "========================================"
           echo "Checking LFS files..."
           echo "========================================"
+
+          # 列出 Libbox.xcframework 目录内容
+          echo "Libbox.xcframework contents:"
+          ls -la iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ 2>/dev/null || echo "Directory not found or empty"
+
+          # 检查关键文件
           if [ -f "iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" ]; then
             echo "lfs_ready=true" >> $GITHUB_OUTPUT
             echo "✅ LFS files downloaded successfully"
-            file iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox
+            file iOS-SwiftUI-Code/uuvpn/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null || true
           else
             echo "lfs_ready=false" >> $GITHUB_OUTPUT
             echo "❌ LFS files not available"
             echo ""
-            echo "Libbox.xcframework contents:"
-            find iOS-SwiftUI-Code/uuvpn/Libbox.xcframework -type f 2>/dev/null | head -20
+            echo "This means Gitea LFS is not properly configured."
           fi
+
+          # 不让 find 命令导致失败
+          exit 0
 
       - name: Pull Docker-OSX image
         if: ${{ steps.check_lfs.outputs.lfs_ready == 'true' }}
