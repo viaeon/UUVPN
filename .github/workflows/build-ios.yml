@@ -140,47 +140,66 @@ jobs:
           echo "Pulling Docker-OSX image (this may take a while)..."
           docker pull sickcodes/docker-osx:latest || echo "Failed to pull image"
 
-      - name: Build iOS with Docker-OSX
+      - name: Start macOS VM with Docker-OSX
         if: ${{ steps.check_lfs.outputs.lfs_ready == 'true' }}
         run: |
           echo "========================================"
-          echo "Starting iOS build in Docker-OSX..."
+          echo "Starting macOS VM with Docker-OSX..."
           echo "========================================"
-          echo "This will take 10-20 minutes for the VM to boot"
+          echo ""
+          echo "Docker-OSX 需要使用 QEMU 运行 macOS 虚拟机"
+          echo "这个镜像只是一个安装器，需要先启动虚拟机"
           echo ""
 
-          # Run macOS container and build
-          docker run --rm \
+          # 使用 Docker-OSX 的正确启动方式
+          # 启动一个持久化的 macOS 容器
+          docker run -d \
+            --name macos-vm \
             --privileged \
             -e RAM=8192 \
             -e SMP=4 \
             -e DISPLAY=dummy \
-            -v $PWD:/workspace \
-            sickcodes/docker-osx:latest \
-            bash -c '
-              echo "Waiting for macOS to boot (60s)..."
-              sleep 60
+            -v /tmp/workspace:/workspace \
+            sickcodes/docker-osx:latest || echo "Failed to start VM"
 
-              echo "Checking environment..."
-              uname -a || true
-              xcodebuild -version || echo "xcodebuild not found in PATH"
+          echo "等待 macOS 虚拟机启动..."
+          sleep 120
 
-              echo ""
-              echo "Navigating to workspace..."
-              cd /workspace/iOS-SwiftUI-Code || exit 1
+          # 检查容器状态
+          docker ps -a | grep macos-vm || echo "VM container not running"
 
-              echo ""
-              echo "Building iOS app..."
-              xcodebuild \
-                -project uuvpn.xcodeproj \
-                -scheme SFI \
-                -sdk iphoneos \
-                -configuration Debug \
-                -derivedDataPath build \
-                CODE_SIGN_IDENTITY="" \
-                CODE_SIGNING_REQUIRED=NO \
-                build || echo "Build failed"
-            ' || echo "Docker-OSX execution failed"
+          echo ""
+          echo "⚠️ 注意: Docker-OSX 需要 KVM 支持才能正常运行 macOS"
+          echo "如果 runner 没有 KVM 支持，VM 将无法启动"
+          echo ""
+          echo "当前构建环境:"
+          ls -la /dev/kvm 2>/dev/null || echo "KVM not available"
+          docker logs macos-vm 2>/dev/null | tail -20 || echo "No VM logs"
+
+      - name: Check macOS VM status
+        if: ${{ steps.check_lfs.outputs.lfs_ready == 'true' }}
+        run: |
+          echo "========================================"
+          echo "macOS VM Status"
+          echo "========================================"
+
+          # 检查 VM 是否真的在运行 macOS
+          docker exec macos-vm uname -a 2>/dev/null || echo "Cannot exec in VM"
+          docker exec macos-vm which xcodebuild 2>/dev/null || echo "xcodebuild not found in VM"
+
+          echo ""
+          echo "⚠️ Docker-OSX 结论:"
+          echo "Docker-OSX 需要在支持 KVM 的主机上运行"
+          echo "当前的 runner 环境可能不支持 KVM"
+          echo ""
+          echo "要真正构建 iOS 应用，建议:"
+          echo "1. 使用 GitHub Actions 的托管 macOS runner"
+          echo "2. 在 Mac 机器上部署 Gitea runner"
+          echo "3. 使用云服务 Mac (如 AWS EC2 Mac)"
+
+          # 清理容器
+          docker stop macos-vm 2>/dev/null || true
+          docker rm macos-vm 2>/dev/null || true
 
       - name: Check build output
         if: ${{ steps.check_lfs.outputs.lfs_ready == 'true' }}
