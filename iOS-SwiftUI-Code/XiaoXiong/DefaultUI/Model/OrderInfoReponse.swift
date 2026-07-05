@@ -40,7 +40,7 @@ struct OrderInfoDatum: Codable ,Identifiable {
     let plan: PlanOrder?
 
     var status_zh: String {
-        switch status {
+        switch status ?? -1 {
         case 0:
             return "待支付"
         case 1:
@@ -53,7 +53,7 @@ struct OrderInfoDatum: Codable ,Identifiable {
     }
 
     var period_zh: String {
-        switch period {
+        switch period ?? "" {
         case "month_price":
             return "月付"
         case "quarter_price":

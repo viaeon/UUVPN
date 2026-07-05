@@ -229,7 +229,7 @@ struct OrderItemView: View {
                     Spacer()
                     
                     
-                    Text("创建时间："+TimestampConverter.convertTimestampToDateString(orderinfo.createdAt))
+                    Text("创建时间："+TimestampConverter.convertTimestampToDateString(orderinfo.createdAt ?? 0))
                     .font(.caption)
                     .fontWeight(.bold)
                     .padding(2)

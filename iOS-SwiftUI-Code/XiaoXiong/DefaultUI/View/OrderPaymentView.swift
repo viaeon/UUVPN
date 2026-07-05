@@ -96,7 +96,7 @@ struct OrderPaymentView: View {
                                 Text("创建时间: ")
                                     .font(.subheadline)
                                     .foregroundColor(.white)
-                                Text(TimestampConverter.convertTimestampToDateString(orderinfo.createdAt))
+                                Text(TimestampConverter.convertTimestampToDateString(orderinfo.createdAt ?? 0))
                                     .font(.subheadline)
                                     .foregroundColor(.white)
                             }
