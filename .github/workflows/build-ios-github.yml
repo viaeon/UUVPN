@@ -145,61 +145,65 @@ jobs:
           # 复制 .app 到临时目录
           cp -r "$APP_PATH" /tmp/UUVPN-uitest.app
 
-          # 1. 删除嵌入的扩展（VPN Extension、IntentsExtension 等）
+          # ===== 第1步：删除所有嵌入的扩展 =====
           echo ""
-          echo "Removing embedded extensions..."
-          ls -la /tmp/UUVPN-uitest.app/PlugIns/ 2>/dev/null || echo "No PlugIns directory"
+          echo "=== Step 1: Removing embedded extensions ==="
+          echo "Before:"
+          ls -la /tmp/UUVPN-uitest.app/PlugIns/ 2>/dev/null || echo "  No PlugIns directory"
           rm -rf /tmp/UUVPN-uitest.app/PlugIns
           echo "PlugIns removed"
 
-          # 2. 删除 archived-expanded-entitlements.xcent（包含原始 entitlements）
-          rm -f /tmp/UUVPN-uitest.app/archived-expanded-entitlements.xcent 2>/dev/null || true
-
-          # 3. 修改 Info.plist，移除需要付费开发者账号的配置
+          # ===== 第2步：删除所有签名相关文件 =====
           echo ""
-          echo "Stripping restricted keys from Info.plist..."
+          echo "=== Step 2: Removing signature artifacts ==="
+          rm -f /tmp/UUVPN-uitest.app/archived-expanded-entitlements.xcent 2>/dev/null || true
+          rm -rf /tmp/UUVPN-uitest.app/_CodeSignature 2>/dev/null || true
+          # 删除嵌入的 provisioning profile
+          rm -f /tmp/UUVPN-uitest.app/embedded.mobileprovision 2>/dev/null || true
+          echo "Signature artifacts removed"
+
+          # ===== 第3步：彻底清理 Info.plist =====
+          echo ""
+          echo "=== Step 3: Stripping Info.plist ==="
+          echo "Info.plist BEFORE cleanup:"
+          /usr/libexec/PlistBuddy -c "Print" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null | head -60 || true
+
+          # 移除需要付费开发者账号或特殊权限的配置
           /usr/libexec/PlistBuddy -c "Delete :NSExtension" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null || true
           /usr/libexec/PlistBuddy -c "Delete :UIBackgroundModes" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Delete :BGTaskSchedulerPermittedIdentifiers" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null || true
+          # 移除 iCloud 容器配置（需要 iCloud 权限）
+          /usr/libexec/PlistBuddy -c "Delete :NSUbiquitousContainers" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null || true
+          # 移除应用服务声明（可能触发权限检查）
+          /usr/libexec/PlistBuddy -c "Delete :NSApplicationServices" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null || true
 
-          # 4. 创建最小化的 entitlements 文件
           echo ""
-          echo "Creating minimal entitlements for free Apple ID signing..."
-          /usr/libexec/PlistBuddy -c "Add : dict" /tmp/minimal-entitlements.plist 2>/dev/null || true
-          # PlistBuddy 会自动创建有效的空 dict plist
+          echo "Info.plist AFTER cleanup:"
+          /usr/libexec/PlistBuddy -c "Print" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null | head -60 || true
 
-          # 5. 用 codesign 重新签名，替换二进制中嵌入的 entitlements
-          #    这是最关键的一步 - 原始 entitlements 编译进了 Mach-O 二进制
-          #    必须用 codesign --entitlements 重签才能替换
+          # ===== 第4步：不做任何 codesign =====
+          # 关键：不使用 codesign，让 Sideloadly 从零签名
+          # 之前的 ad-hoc 签名会与 Sideloadly/爱思助手的重签冲突
           echo ""
-          echo "Re-signing app with minimal entitlements (ad-hoc)..."
-          codesign --entitlements /tmp/minimal-entitlements.plist --force --deep -s - /tmp/UUVPN-uitest.app 2>&1 || {
-            echo "Deep signing failed, trying individual signing..."
-            # 先签 frameworks
-            for framework in /tmp/UUVPN-uitest.app/Frameworks/*.framework; do
-              if [ -d "$framework" ]; then
-                echo "Signing framework: $framework"
-                codesign --force -s - "$framework" 2>/dev/null || true
-              fi
-            done
-            for dylib in /tmp/UUVPN-uitest.app/Frameworks/*.dylib; do
-              if [ -f "$dylib" ]; then
-                echo "Signing dylib: $dylib"
-                codesign --force -s - "$dylib" 2>/dev/null || true
-              fi
-            done
-            # 再签主 app
-            codesign --entitlements /tmp/minimal-entitlements.plist --force -s - /tmp/UUVPN-uitest.app 2>&1 || true
-          }
+          echo "=== Step 4: Skipping codesign (Sideloadly will handle signing) ==="
+          echo "App is UNSIGNED - this is intentional for Sideloadly compatibility"
 
-          # 验证签名和 entitlements
+          # ===== 第5步：验证 .app 结构 =====
           echo ""
-          echo "Verifying signature..."
-          codesign -dvv /tmp/UUVPN-uitest.app 2>&1 | head -20 || true
+          echo "=== Step 5: Verifying app structure ==="
+          echo "App contents:"
+          ls -la /tmp/UUVPN-uitest.app/ | head -30 || true
           echo ""
-          echo "Current entitlements:"
-          codesign -d --entitlements :- /tmp/UUVPN-uitest.app 2>&1 || true
+          echo "Frameworks:"
+          ls -la /tmp/UUVPN-uitest.app/Frameworks/ 2>/dev/null || echo "  No Frameworks directory"
+          echo ""
+          echo "PlugIns (should be empty/missing):"
+          ls -la /tmp/UUVPN-uitest.app/PlugIns/ 2>/dev/null || echo "  No PlugIns directory (correct)"
+          echo ""
+          echo "_CodeSignature (should be missing):"
+          ls -la /tmp/UUVPN-uitest.app/_CodeSignature/ 2>/dev/null || echo "  No _CodeSignature directory (correct)"
 
-          # 6. 创建 UI 测试版 IPA
+          # ===== 第6步：创建 IPA =====
           mkdir -p Payload
           cp -r /tmp/UUVPN-uitest.app Payload/uuvpn.app
           zip -r "UUVPN-uitest.ipa" Payload
@@ -209,7 +213,7 @@ jobs:
           ls -lh UUVPN-uitest.ipa
 
           # 清理
-          rm -rf Payload /tmp/UUVPN-uitest.app /tmp/minimal-entitlements.plist
+          rm -rf Payload /tmp/UUVPN-uitest.app
 
       - name: Upload Full IPA Artifact
         uses: actions/upload-artifact@v4
