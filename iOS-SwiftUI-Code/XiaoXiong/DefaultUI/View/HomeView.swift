@@ -2228,7 +2228,7 @@ struct HomeView: View {
     //                            .aspectRatio(contentMode: .fit)
     //                            .frame(width: 20, height: 20)
 
-                                            Text(server.name)
+                                            Text(server.name ?? "")
                                                 .font(.subheadline)
                                                 .fontWeight(.semibold).foregroundStyle(.white)
                                         }
