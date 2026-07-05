@@ -184,14 +184,8 @@ jobs:
           echo ""
           echo "=== Step 4: Ad-hoc signing with empty entitlements ==="
 
-          # 创建正确的空 entitlements plist（直接写 XML，不用 PlistBuddy）
-          cat > /tmp/minimal-entitlements.plist << 'PLISTEOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict/>
-</plist>
-PLISTEOF
+          # 创建正确的空 entitlements plist（用 plutil 确保格式正确）
+          plutil -create xml1 /tmp/minimal-entitlements.plist
 
           echo "Minimal entitlements plist created:"
           cat /tmp/minimal-entitlements.plist
