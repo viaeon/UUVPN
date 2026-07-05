@@ -1,15 +1,6 @@
 name: Build UUVPN
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-    tags:
-      - 'v*'
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       build_android:
