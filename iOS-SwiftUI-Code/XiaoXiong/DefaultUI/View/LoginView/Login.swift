@@ -33,6 +33,13 @@ struct LoginResponseSuccessClass: Codable {
         case isAdmin = "is_admin"
         case authData = "auth_data"
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        token = try container.decodeIfPresent(String.self, forKey: .token)
+        authData = try container.decodeIfPresent(String.self, forKey: .authData)
+        isAdmin = FlexibleDecoding.decodeIntOrBoolOptional(container: container, key: .isAdmin)
+    }
 }
 
 
