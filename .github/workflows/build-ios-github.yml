@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  IOS_XCODE_VERSION: "26.3"
+  IOS_XCODE_VERSION: "16.4"
 
 jobs:
   build-ios:
