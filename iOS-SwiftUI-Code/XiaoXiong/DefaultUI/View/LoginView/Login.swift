@@ -38,7 +38,7 @@ struct LoginResponseSuccessClass: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         token = try container.decodeIfPresent(String.self, forKey: .token)
         authData = try container.decodeIfPresent(String.self, forKey: .authData)
-        isAdmin = FlexibleDecoding.decodeIntOrBoolOptional(container: container, key: .isAdmin)
+        isAdmin = decodeIntOrBoolOptional(from: container, key: .isAdmin)
     }
 }
 
