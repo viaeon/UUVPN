@@ -103,7 +103,7 @@ jobs:
             exit 1
           fi
 
-      - name: Create IPA from .app
+      - name: Create IPA from .app (full version)
         run: |
           cd iOS-SwiftUI-Code
 
@@ -113,24 +113,94 @@ jobs:
           if [ -n "$APP_PATH" ] && [ -d "$APP_PATH" ]; then
             echo "Found .app at: $APP_PATH"
 
-            # 创建 IPA
+            # 创建完整版 IPA（包含 VPN 扩展，需要开发者账号签名）
             mkdir -p Payload
             cp -r "$APP_PATH" Payload/
             zip -r "UUVPN-debug.ipa" Payload
 
-            echo "✅ IPA created: UUVPN-debug.ipa"
+            echo "✅ Full IPA created: UUVPN-debug.ipa"
             ls -lh UUVPN-debug.ipa
+
+            rm -rf Payload
           else
             echo "❌ No .app found, cannot create IPA"
             find build -name "*.app" -type d 2>/dev/null || true
             exit 1
           fi
 
-      - name: Upload IPA Artifact
+      - name: Create UI Test IPA (free signing compatible)
+        run: |
+          cd iOS-SwiftUI-Code
+
+          # 查找 .app 文件
+          APP_PATH=$(find build -name "*.app" -type d | grep -v "Watch" | head -1)
+
+          if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
+            echo "❌ No .app found"
+            exit 1
+          fi
+
+          echo "Creating UI Test IPA from: $APP_PATH"
+
+          # 复制 .app 到临时目录
+          cp -r "$APP_PATH" /tmp/UUVPN-uitest.app
+
+          # 1. 删除嵌入的扩展（VPN Extension、IntentsExtension 等）
+          #    这些扩展需要 packet-tunnel-provider 权限，免费 Apple ID 无法签名
+          echo ""
+          echo "Removing embedded extensions..."
+          ls -la /tmp/UUVPN-uitest.app/PlugIns/ 2>/dev/null || echo "No PlugIns directory"
+          rm -rf /tmp/UUVPN-uitest.app/PlugIns/*.appex
+          echo "After removal:"
+          ls -la /tmp/UUVPN-uitest.app/PlugIns/ 2>/dev/null || echo "PlugIns directory empty or removed"
+
+          # 2. 删除嵌入的 framework 中的扩展相关内容
+          rm -rf /tmp/UUVPN-uitest.app/PlugIns 2>/dev/null
+
+          # 3. 修改 Info.plist，移除 Network Extension 配置
+          echo ""
+          echo "Stripping Network Extension configuration from Info.plist..."
+
+          # 删除 NSExtension 配置
+          /usr/libexec/PlistBuddy -c "Delete :NSExtension" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null || true
+
+          # 4. 创建最小化的 entitlements（去掉付费开发者账号才有的权限）
+          echo ""
+          echo "Creating minimal entitlements..."
+          cat > /tmp/UUVPN-uitest.app/UUVPN-entitlements.plist << 'ENTITLEMENTS'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict/>
+</plist>
+ENTITLEMENTS
+
+          echo "Minimal entitlements created (empty dict - only standard permissions)"
+
+          # 5. 创建 UI 测试版 IPA
+          mkdir -p Payload
+          cp -r /tmp/UUVPN-uitest.app Payload/uuvpn.app
+          zip -r "UUVPN-uitest.ipa" Payload
+
+          echo ""
+          echo "✅ UI Test IPA created: UUVPN-uitest.ipa"
+          ls -lh UUVPN-uitest.ipa
+
+          # 清理
+          rm -rf Payload /tmp/UUVPN-uitest.app
+
+      - name: Upload Full IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: UUVPN-iOS-Debug
+          name: UUVPN-iOS-Full
           path: iOS-SwiftUI-Code/UUVPN-debug.ipa
+          retention-days: 30
+
+      - name: Upload UI Test IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: UUVPN-iOS-UITest
+          path: iOS-SwiftUI-Code/UUVPN-uitest.ipa
           retention-days: 30
 
       - name: Upload Build Log
