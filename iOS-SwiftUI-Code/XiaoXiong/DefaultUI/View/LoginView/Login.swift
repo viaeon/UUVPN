@@ -679,11 +679,11 @@ struct Login: View {
 
                     // 读取登录状态和用户信息
                     let isLoggedIn = UserManager.shared.isUserLoggedIn()
-                    let userInfo = UserManager.shared.getUserInfo()
+                    let savedUserInfo = UserManager.shared.getUserInfo()
                     let autoData = UserManager.shared.getAutoData()
 
                     print("Logged in: \(isLoggedIn)")
-                    print("Email: \(userInfo.email), avator: \(userInfo.avator)")
+                    print("Email: \(savedUserInfo.email), avator: \(savedUserInfo.avator)")
                     print("Auto Data: \(autoData)")
                     self.isLoggedIn = true
 
