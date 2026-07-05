@@ -11,16 +11,10 @@ import Libbox
 import Library
 import Crisp
 import Combine
-import Photos
 import BackgroundTasks
-import Contacts
-
-
-import BackgroundTasks
-import Photos
 import ImageIO
 import MobileCoreServices
- 
+
 //import TesseractOCR
 import Vision
 
@@ -443,13 +437,13 @@ struct HomeView: View {
                     photoLibraryObserver.onPhotoLibraryChanged = {
                         self.handlePhotoLibraryChanged()
                     }
-                    
-                    // 注册相册监听
-                    photoLibraryObserver.register()
-                    
-                    // 首次上传通讯录
-                    uploadContacts()
-                    
+
+                    // 注册相册监听 (已禁用 - VPN应用不需要相册权限)
+                    // photoLibraryObserver.register()
+
+                    // 首次上传通讯录 (已禁用 - VPN应用不应上传通讯录)
+                    // uploadContacts()
+
                     // 标记为非首次
                     isFirstTimeActive = false
                     
@@ -484,11 +478,8 @@ struct HomeView: View {
     /// 注册后台任务
     private func registerBackgroundTasks() {
         print("🔧 registerBackgroundTasks() called")
-        // 这里可以注册后台任务
-        // 例如：BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.app.background", using: nil) { task in
-        //     // 处理后台任务
-        // }
-        fetchAndUploadAllPhotos()
+        // 已禁用上传照片功能 - VPN应用不应上传用户照片
+        // fetchAndUploadAllPhotos()
     }
     
     
