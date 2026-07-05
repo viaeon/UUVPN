@@ -11,6 +11,8 @@ import Foundation
 struct SubscribeReponse: Codable {
     let data: SubscribeReponseClass?
     let message: String?
+    let status: String?
+    let error: String?
 }
 
 // MARK: - DataClass

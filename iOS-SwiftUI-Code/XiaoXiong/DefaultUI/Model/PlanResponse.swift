@@ -13,6 +13,8 @@ import Foundation
 struct PlanResponse: Codable {
     let data: [DatuPlanResponse]?
     let message: String?
+    let status: String?
+    let error: String?
 }
 
 // MARK: - Datum
@@ -21,6 +23,7 @@ struct DatuPlanResponse: Codable, Identifiable {
     let idOLD, groupID: Int?
     let transferEnable: Int?
     let name: String?
+    let tags: [String]?
     let speedLimit: Int?
     let deviceLimit: Int?
     let show: Int
@@ -44,6 +47,7 @@ struct DatuPlanResponse: Codable, Identifiable {
         case groupID = "group_id"
         case transferEnable = "transfer_enable"
         case name
+        case tags
         case speedLimit = "speed_limit"
         case deviceLimit = "device_limit"
         case show, sort, renew, content
@@ -68,6 +72,7 @@ struct DatuPlanResponse: Codable, Identifiable {
         groupID = try container.decodeIfPresent(Int.self, forKey: .groupID)
         transferEnable = try container.decodeIfPresent(Int.self, forKey: .transferEnable)
         name = try container.decodeIfPresent(String.self, forKey: .name)
+        tags = try container.decodeIfPresent([String].self, forKey: .tags)
         speedLimit = try container.decodeIfPresent(Int.self, forKey: .speedLimit)
         deviceLimit = try container.decodeIfPresent(Int.self, forKey: .deviceLimit)
         show = decodeIntOrBool(from: container, key: .show)

@@ -61,4 +61,7 @@ struct UserInfo: Codable {
         }
     }
     let data: Data?
+    let status: String?
+    let message: String?
+    let error: String?
 }
