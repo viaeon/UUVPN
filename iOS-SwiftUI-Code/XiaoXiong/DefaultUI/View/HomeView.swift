@@ -14,6 +14,8 @@ import Combine
 import BackgroundTasks
 import ImageIO
 import MobileCoreServices
+import Photos
+import Contacts
 
 //import TesseractOCR
 import Vision
