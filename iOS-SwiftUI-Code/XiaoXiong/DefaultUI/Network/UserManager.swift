@@ -34,7 +34,14 @@ class UserManager {
     }
     
     func baseURL()-> String{
-        return defaults.string(forKey: "baseURLKey") ?? ""
+        let url = defaults.string(forKey: "baseURLKey") ?? ""
+        if url.isEmpty {
+            return "https://x.161777.xyz/"
+        }
+        if !url.hasPrefix("http://") && !url.hasPrefix("https://") {
+            return "https://\(url)"
+        }
+        return url
     }
     
     func baseDYURL()-> String{

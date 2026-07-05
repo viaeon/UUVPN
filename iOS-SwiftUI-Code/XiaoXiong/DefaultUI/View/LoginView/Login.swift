@@ -535,7 +535,7 @@ struct Login: View {
               
                 if let jsonResponse = try? JSONDecoder().decode(configReponse.self, from: data){
                    //  dump(jsonResponse)
-                    if jsonResponse.code == 0 || jsonResponse.code == 1 {
+                    if jsonResponse.code == 1 {
                         //save data
                         UserManager.shared.storebaseURLData(data: jsonResponse.baseURL)
                         UserManager.shared.storemainregisterURLData(data: jsonResponse.mainregisterURL)
