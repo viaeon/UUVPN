@@ -7,12 +7,12 @@ public enum FilePath {
 public extension FilePath {
     static let groupName = "group.\(packageName)"
 
-    private static let defaultSharedDirectory: URL! = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: FilePath.groupName)
+    private static let defaultSharedDirectory: URL? = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: FilePath.groupName)
 
     #if os(iOS)
-        static let sharedDirectory = defaultSharedDirectory!
+        static let sharedDirectory = defaultSharedDirectory ?? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     #elseif os(tvOS)
-        static let sharedDirectory = defaultSharedDirectory
+        static let sharedDirectory = (defaultSharedDirectory ?? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!)
             .appendingPathComponent("Library", isDirectory: true)
             .appendingPathComponent("Caches", isDirectory: true)
     #elseif os(macOS)
@@ -42,7 +42,7 @@ public extension FilePath {
 
     #endif
 
-    static var iCloudDirectory = FileManager.default.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("Documents", isDirectory: true) ?? URL(string: "stub")!
+    static var iCloudDirectory = FileManager.default.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("Documents", isDirectory: true) ?? sharedDirectory
 }
 
 public extension URL {
