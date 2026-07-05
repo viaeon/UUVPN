@@ -23,6 +23,7 @@
 		042FCA3A2CBA42F200D86618 /* UserManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042FCA2E2CBA42F200D86618 /* UserManager.swift */; };
 		042FCA3C2CBA590300D86618 /* SubscribeReponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042FCA3B2CBA590300D86618 /* SubscribeReponse.swift */; };
 		042FCA3E2CBA5CF800D86618 /* PlanResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042FCA3D2CBA5CF800D86618 /* PlanResponse.swift */; };
+		042FCA502CBBF00000D86618 /* FlexibleDecoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042FCA4F2CBBF00000D86618 /* FlexibleDecoding.swift */; };
 		042FCA422CBA9B8300D86618 /* InviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042FCA412CBA9B8300D86618 /* InviteView.swift */; };
 		042FCA462CBAA1ED00D86618 /* SettingsAboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042FCA452CBAA1ED00D86618 /* SettingsAboutView.swift */; };
 		042FCA482CBAA45F00D86618 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042FCA472CBAA45F00D86618 /* WebView.swift */; };
@@ -314,6 +315,7 @@
 		042FCA2E2CBA42F200D86618 /* UserManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserManager.swift; sourceTree = "<group>"; };
 		042FCA3B2CBA590300D86618 /* SubscribeReponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscribeReponse.swift; sourceTree = "<group>"; };
 		042FCA3D2CBA5CF800D86618 /* PlanResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanResponse.swift; sourceTree = "<group>"; };
+		042FCA4F2CBBF00000D86618 /* FlexibleDecoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlexibleDecoding.swift; sourceTree = "<group>"; };
 		042FCA412CBA9B8300D86618 /* InviteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteView.swift; sourceTree = "<group>"; };
 		042FCA452CBAA1ED00D86618 /* SettingsAboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAboutView.swift; sourceTree = "<group>"; };
 		042FCA472CBAA45F00D86618 /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
@@ -908,6 +910,7 @@
 				040797332CBBCE710003B6AC /* Nodes.swift */,
 				C0DDD6662CB9058000AE1C0A /* Server.swift */,
 				042FCA3D2CBA5CF800D86618 /* PlanResponse.swift */,
+				042FCA4F2CBBF00000D86618 /* FlexibleDecoding.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -1332,6 +1335,7 @@
 				C0546F0D2CB922C900937BAF /* ActiveDashboardViewNewUI.swift in Sources */,
 				0479076C2CC5F7B500178621 /* InviteReponse.swift in Sources */,
 				042FCA3E2CBA5CF800D86618 /* PlanResponse.swift in Sources */,
+				042FCA502CBBF00000D86618 /* FlexibleDecoding.swift in Sources */,
 				3AC1944F2A50247300BD8CB9 /* ApplicationDelegate.swift in Sources */,
 				3AEC20F62A459AB400A63465 /* Application.swift in Sources */,
 				C0DDD66F2CB9058000AE1C0A /* LottieView.swift in Sources */,

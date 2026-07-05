@@ -53,7 +53,7 @@ struct OrderPaymentView: View {
                             Button(action: {
                                 alert = Alert(YesOrNOMessage: "确定取消订单吗？"){
                                     Task{
-                                        await cancelorder(orderNO: orderinfo.tradeNo)
+                                        await cancelorder(orderNO: (orderinfo.tradeNo ?? ""))
                                     }
                                 }
                             }, label: {
@@ -87,7 +87,7 @@ struct OrderPaymentView: View {
                                 Text("订单号: ")
                                     .font(.subheadline)
                                     .foregroundColor(.white)
-                                Text(orderinfo.tradeNo)
+                                Text((orderinfo.tradeNo ?? ""))
                                     .font(.subheadline)
                                     .foregroundColor(.white)
                             }
@@ -111,7 +111,7 @@ struct OrderPaymentView: View {
                                 Text("商品名称: ")
                                     .font(.subheadline)
                                     .foregroundColor(.white)
-                                Text(orderinfo.plan.name)
+                                Text(orderinfo.plan?.name ?? "")
                                     .font(.subheadline)
                                     .foregroundColor(.yellow)
                             }
@@ -129,7 +129,7 @@ struct OrderPaymentView: View {
                                 Text("产品流量: ")
                                     .font(.subheadline)
                                     .foregroundColor(.white)
-                                Text("\(orderinfo.plan.transferEnable ?? 0)GB/月")
+                                Text("\(orderinfo.plan?.transferEnable ?? 0)GB/月")
                                     .font(.subheadline)
                                     .foregroundColor(.white)
                             }
@@ -201,7 +201,7 @@ struct OrderPaymentView: View {
                                     .font(.subheadline)
                                     .foregroundColor(.white)
                                 Spacer()
-                                Text("¥\(String(format: "%.2f", orderinfo.totalAmount/100))")
+                                Text("¥\(String(format: "%.2f", (orderinfo.totalAmount ?? 0)/100))")
                                     .font(.subheadline)
                                     .foregroundColor(.white)
                             }
@@ -261,7 +261,7 @@ struct OrderPaymentView: View {
                                         primaryButton: .default(Text("确定"),action: {
                                             Task{
                                                 if let paymentID = payment?.id {
-                                                    await submitOrder(orderNO:orderinfo.tradeNo,paymentID:paymentID)
+                                                    await submitOrder(orderNO:(orderinfo.tradeNo ?? ""),paymentID:paymentID)
                                                 }
                                                 
                                             }
@@ -292,11 +292,11 @@ struct OrderPaymentView: View {
     }
     
      func  shouxufei() -> Double {
-         return orderinfo.totalAmount/100 * (Double(payment?.handlingFeePercent ?? "") ?? 0.0)/100
+         return (orderinfo.totalAmount ?? 0)/100 * (Double(payment?.handlingFeePercent ?? "") ?? 0.0)/100
     }
                                  
      func  total() -> Double{
-        return orderinfo.totalAmount/100 +  shouxufei()
+        return (orderinfo.totalAmount ?? 0)/100 +  shouxufei()
     }
     
     func cancelorder(orderNO:String) async {

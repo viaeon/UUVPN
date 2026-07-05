@@ -134,29 +134,23 @@ struct SideMenuView: View {
                                 }else{
                                     
                                     if let plandesss = self.plandes {
-                                        if plandesss.transferEnable > 0 {
+                                        let dVal = plandesss.d ?? 0
+                                        let tVal = plandesss.transferEnable ?? 0
+                                        if tVal > 0 {
                                             VStack(alignment: .leading, spacing: 5) {
-                                                
-                                                //   Text("订阅详情：")  .font(.subheadline)
-                                                
-                                                
+
                                                 Text(plandesss.plan?.name ?? "")
                                                     .font(.subheadline)
-                                                let u = plandesss.d/1024/1024/1024
-                                                let t = plandesss.transferEnable/1024/1024/1024
-                                                
+                                                let u = dVal/1024/1024/1024
+                                                let t = tVal/1024/1024/1024
+
                                                 Spacer().frame(height: 10)
-                                                
+
                                                 Text("已用: \(u) GB / 总计：\(t) GB")
                                                     .font(.subheadline).bold()
-                                                
+
                                                 HStack {
-                                                    // White bar on the left
-                                                    //                                            RoundedRectangle(cornerRadius: 10)
-                                                    //                                                .fill(Color.red)
-                                                    //                                                .frame(width: 300*CGFloat(plandesss.d)/CGFloat(plandesss.transferEnable),  height: 20)
-                                                    //
-                                                    Text("").frame(height: 20).frame(minWidth: (CGFloat(plandesss.d)/CGFloat(plandesss.transferEnable))<=0.1 ? 20 : 300*(CGFloat(plandesss.d)/CGFloat(plandesss.transferEnable))).background(
+                                                    Text("").frame(height: 20).frame(minWidth: (CGFloat(dVal)/CGFloat(tVal))<=0.1 ? 20 : 300*(CGFloat(dVal)/CGFloat(tVal))).background(
                                                         RoundedRectangle(cornerRadius: 10)
                                                             .fill(
                                                                 Color.red
@@ -360,7 +354,7 @@ struct SideMenuView: View {
                     if let data = Subscribe.data {
                         
                         plandes = data
-                        emailid = data.email
+                        emailid = data.email ?? ""
                                              
                         UserManager.shared.storeUserInfo(email: emailid, avator: "")
 //                        UserManager.shared.storeSuburlData(data: data.subscribeURL)

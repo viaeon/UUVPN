@@ -1673,7 +1673,7 @@ struct HomeView: View {
 //                    withAnimation {
 //                        islogined = true
 //                    }
-                    print("服务器返回最新的地址："+subscript_json.subscribeURL + " \n本地AppStorage：" + UserManager.shared.getSuburlData())
+                    print("服务器返回最新的地址："+(subscript_json.subscribeURL ?? "") + " \n本地AppStorage：" + UserManager.shared.getSuburlData())
                     
                     
                     var localProfile:ProfilePreview?
@@ -1695,8 +1695,8 @@ struct HomeView: View {
                         }else{
                             print("第一次准备存储subscribe 地址，首先检查是否付费")
                             // >>>
-                            UserManager.shared.storeSuburlData(data: subscript_json.subscribeURL)
-                            print("服务器返回最新的地址："+subscript_json.subscribeURL + " \n本地AppStorage：" + UserManager.shared.getSuburlData())
+                            UserManager.shared.storeSuburlData(data: (subscript_json.subscribeURL ?? ""))
+                            print("服务器返回最新的地址："+(subscript_json.subscribeURL ?? "") + " \n本地AppStorage：" + UserManager.shared.getSuburlData())
                             Task{
                                 //通知更新 Profile
                                 environments.profileUpdate.send()
@@ -1705,7 +1705,7 @@ struct HomeView: View {
                             
                             
 //                            Task{
-//                                try await checkingProfileBackground(remoteURL: subscript_json.subscribeURL)
+//                                try await checkingProfileBackground(remoteURL: (subscript_json.subscribeURL ?? ""))
 //                            }
                             
                             
@@ -1714,14 +1714,14 @@ struct HomeView: View {
                     }
                     
                     if let local = localProfile , let remoteURL = local.remoteURL {
-                        print("存在本地目前订阅的URL:  - > \(remoteURL) \n 服务器最新地址:\(subscript_json.subscribeURL)")
+                        print("存在本地目前订阅的URL:  - > \(remoteURL) \n 服务器最新地址:\((subscript_json.subscribeURL ?? ""))")
 //                        Task{
-//                            try await checkingProfileBackground(remoteURL: subscript_json.subscribeURL)
+//                            try await checkingProfileBackground(remoteURL: (subscript_json.subscribeURL ?? ""))
 //                        }
                         //>>
-                        UserManager.shared.storeSuburlData(data: subscript_json.subscribeURL)
+                        UserManager.shared.storeSuburlData(data: (subscript_json.subscribeURL ?? ""))
                         
-                        if remoteURL != subscript_json.subscribeURL{
+                        if remoteURL != (subscript_json.subscribeURL ?? ""){
                             //切换了用户，删掉之前的 profile 数据然后重新 下载
                             Task {
                                 

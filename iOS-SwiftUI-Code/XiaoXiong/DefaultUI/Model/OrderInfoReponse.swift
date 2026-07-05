@@ -25,21 +25,20 @@ struct OrderInfoDatum: Codable ,Identifiable {
     let inviteUserID: String?
     let planID: Int?
     let siteID, couponID: String?
-    let type: Int
-    let period: String
+    let type: Int?
+    let period: String?
     let couponCode: String?
-    let tradeNo: String
+    let tradeNo: String?
     let callbackNo: String?
-    let totalAmount: Double
+    let totalAmount: Double?
     let handlingAmount, discountAmount, surplusAmount, refundAmount: Double?
     let balanceAmount, surplusOrderIDS,paymentID: Int?
-    let status: Int
-//    let actualCommissionBalance, paidAt: String?
-    let createdAt, updatedAt: Int
+    let status: Int?
+    let createdAt, updatedAt: Int?
     let commissionStatus, commissionBalance: Int?
     let tixianstatus: String?
-    let plan: PlanOrder
-    
+    let plan: PlanOrder?
+
     var status_zh: String {
         switch status {
         case 0:
@@ -52,7 +51,7 @@ struct OrderInfoDatum: Codable ,Identifiable {
             return "未知"
         }
     }
-    
+
     var period_zh: String {
         switch period {
         case "month_price":
@@ -67,7 +66,7 @@ struct OrderInfoDatum: Codable ,Identifiable {
             return "月付"
         }
     }
-    
+
     enum CodingKeys: String, CodingKey {
         case inviteUserID = "invite_user_id"
         case planID = "plan_id"
@@ -88,26 +87,60 @@ struct OrderInfoDatum: Codable ,Identifiable {
         case status
         case commissionStatus = "commission_status"
         case commissionBalance = "commission_balance"
-//        case actualCommissionBalance = "actual_commission_balance"
-//        case paidAt = "paid_at"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case tixianstatus, plan
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        inviteUserID = try container.decodeIfPresent(String.self, forKey: .inviteUserID)
+        planID = try container.decodeIfPresent(Int.self, forKey: .planID)
+        siteID = try container.decodeIfPresent(String.self, forKey: .siteID)
+        couponID = try container.decodeIfPresent(String.self, forKey: .couponID)
+        type = try container.decodeIfPresent(Int.self, forKey: .type)
+        period = try container.decodeIfPresent(String.self, forKey: .period)
+        couponCode = try container.decodeIfPresent(String.self, forKey: .couponCode)
+        tradeNo = try container.decodeIfPresent(String.self, forKey: .tradeNo)
+        callbackNo = try container.decodeIfPresent(String.self, forKey: .callbackNo)
+        totalAmount = try container.decodeIfPresent(Double.self, forKey: .totalAmount)
+        handlingAmount = try container.decodeIfPresent(Double.self, forKey: .handlingAmount)
+        discountAmount = try container.decodeIfPresent(Double.self, forKey: .discountAmount)
+        surplusAmount = try container.decodeIfPresent(Double.self, forKey: .surplusAmount)
+        refundAmount = try container.decodeIfPresent(Double.self, forKey: .refundAmount)
+        balanceAmount = try container.decodeIfPresent(Int.self, forKey: .balanceAmount)
+        surplusOrderIDS = try container.decodeIfPresent(Int.self, forKey: .surplusOrderIDS)
+        paymentID = try container.decodeIfPresent(Int.self, forKey: .paymentID)
+        status = try container.decodeIfPresent(Int.self, forKey: .status)
+        commissionStatus = try container.decodeIfPresent(Int.self, forKey: .commissionStatus)
+        commissionBalance = try container.decodeIfPresent(Int.self, forKey: .commissionBalance)
+        createdAt = try container.decodeIfPresent(Int.self, forKey: .createdAt)
+        updatedAt = try container.decodeIfPresent(Int.self, forKey: .updatedAt)
+        tixianstatus = try container.decodeIfPresent(String.self, forKey: .tixianstatus)
+        plan = try container.decodeIfPresent(PlanOrder.self, forKey: .plan)
     }
 }
 
 // MARK: - Plan
 struct PlanOrder: Codable {
-    let id: Int
-    let name: String
+    let id: Int?
+    let name: String?
     let speedLimit: Int?
-    let show, sort, renew, groupID, transferEnable: Int?
-    let content: String
+    let show: Int
+    let sort: Int?
+    let renew: Int
+    let groupID: Int?
+    let transferEnable: Int?
+    let content: String?
     let monthPrice, quarterPrice, halfYearPrice, yearPrice: Int?
     let twoYearPrice, threeYearPrice, onetimePrice, resetPrice: Double?
     let resetTrafficMethod: Int?
     let capacityLimit: Int?
-    let createdAt, updatedAt: Int
+    let createdAt, updatedAt: Int?
+
+    /// sell 字段：API 可能返回 Int 或 Bool
+    private let _sellRaw: Int?
+    var isSell: Bool { _sellRaw != 0 }
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -128,6 +161,32 @@ struct PlanOrder: Codable {
         case capacityLimit = "capacity_limit"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+        case _sellRaw = "sell"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(Int.self, forKey: .id)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        speedLimit = try container.decodeIfPresent(Int.self, forKey: .speedLimit)
+        show = decodeIntOrBool(from: container, key: .show)
+        sort = try container.decodeIfPresent(Int.self, forKey: .sort)
+        renew = decodeIntOrBool(from: container, key: .renew)
+        groupID = try container.decodeIfPresent(Int.self, forKey: .groupID)
+        transferEnable = try container.decodeIfPresent(Int.self, forKey: .transferEnable)
+        content = try container.decodeIfPresent(String.self, forKey: .content)
+        monthPrice = try container.decodeIfPresent(Int.self, forKey: .monthPrice)
+        quarterPrice = try container.decodeIfPresent(Int.self, forKey: .quarterPrice)
+        halfYearPrice = try container.decodeIfPresent(Int.self, forKey: .halfYearPrice)
+        yearPrice = try container.decodeIfPresent(Int.self, forKey: .yearPrice)
+        twoYearPrice = try container.decodeIfPresent(Double.self, forKey: .twoYearPrice)
+        threeYearPrice = try container.decodeIfPresent(Double.self, forKey: .threeYearPrice)
+        onetimePrice = try container.decodeIfPresent(Double.self, forKey: .onetimePrice)
+        resetPrice = try container.decodeIfPresent(Double.self, forKey: .resetPrice)
+        resetTrafficMethod = try container.decodeIfPresent(Int.self, forKey: .resetTrafficMethod)
+        capacityLimit = try container.decodeIfPresent(Int.self, forKey: .capacityLimit)
+        createdAt = try container.decodeIfPresent(Int.self, forKey: .createdAt)
+        updatedAt = try container.decodeIfPresent(Int.self, forKey: .updatedAt)
+        _sellRaw = decodeIntOrBoolOptional(from: container, key: ._sellRaw)
     }
 }
- 

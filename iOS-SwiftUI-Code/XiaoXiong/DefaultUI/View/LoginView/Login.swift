@@ -313,7 +313,7 @@ struct Login: View {
                 }
 
                 if let userInfo = userInfo {
-                    Text("Logged in as: \(userInfo.data.email)")
+                    Text("Logged in as: \(userInfo.data?.email ?? "")")
 //                    AsyncImage(url: URL(string: userInfo.data.avatar_url))
 //                        .frame(width: 64, height: 64)
 //                        .clipShape(Circle())
@@ -661,7 +661,7 @@ struct Login: View {
                     
                     
                     UserManager.shared.saveUserInfoToLocal(userInfo: userInfo)
-                    UserManager.shared.storeUserInfo(email: userInfo.data.email, avator:  userInfo.data.avatar_url)
+                    UserManager.shared.storeUserInfo(email: userInfo.data?.email ?? "", avator:  userInfo.data?.avatar_url ?? "")
                     
                     
                     // 读取登录状态和用户信息

@@ -191,18 +191,18 @@ struct OrderItemView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(orderinfo.plan.name + " " + "\(orderinfo.plan.transferEnable ?? 0)GB/月")
+                Text((orderinfo.plan?.name ?? "") + " " + "\(orderinfo.plan?.transferEnable ?? 0)GB/月")
                     .font(.headline)
                     .foregroundColor(.black).multilineTextAlignment(.leading)
                 
                 
-                Text("订单号："+orderinfo.tradeNo)
+                Text("订单号："+(orderinfo.tradeNo ?? ""))
                     .font(.headline)
                     .foregroundColor(.black).multilineTextAlignment(.leading)
                 //.fontWeight(orderinfo.status == 2 ? .bold : .regular)
                 
                 
-                Text("订单金额：¥\(String(format: "%.2f", orderinfo.totalAmount/100))")
+                Text("订单金额：¥\(String(format: "%.2f", (orderinfo.totalAmount ?? 0)/100))")
                     .font(.subheadline)
                     .foregroundColor(.black)
                 

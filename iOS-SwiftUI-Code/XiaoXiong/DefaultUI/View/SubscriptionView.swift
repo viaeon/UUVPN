@@ -173,7 +173,7 @@ struct SubscriptionView: View {
                                     }
                                 }, label: {
                                     
-                                    SubscriptionPlanView(planName: plan.name, originalPrice: "¥\(String(format: "%.2f", Double(plan.monthPrice ?? 0)/100)) /月", discountedPrice: "", discountPercentage: "", monthlyPrice: "", content: plan.content ?? "", bestPlan: plan.idOLD == planList.count,planContent: "\(plan.transferEnable ?? 0)GB/月")
+                                    SubscriptionPlanView(planName: plan.name ?? "", originalPrice: "¥\(String(format: "%.2f", Double(plan.monthPrice ?? 0)/100)) /月", discountedPrice: "", discountPercentage: "", monthlyPrice: "", content: plan.content ?? "", bestPlan: (plan.idOLD ?? 0) == planList.count,planContent: "\(plan.transferEnable ?? 0)GB/月")
                                     
                                     //                                Text( plan.content ?? "").padding()
                                     
