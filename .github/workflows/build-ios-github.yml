@@ -8,21 +8,9 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
-    inputs:
-      build_debug:
-        description: 'Build Debug IPA'
-        required: false
-        default: true
-        type: boolean
-      build_release:
-        description: 'Build Release IPA'
-        required: false
-        default: false
-        type: boolean
 
 env:
-  IOS_XCODE_VERSION: "16.0"
-  IOS_DEPLOYMENT_TARGET: "15.0"
+  IOS_XCODE_VERSION: "26.3"
 
 jobs:
   build-ios:
@@ -35,57 +23,49 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-          lfs: true
 
-      - name: Download Libbox.xcframework from upstream
+      - name: Download and restore Libbox.xcframework
         run: |
           echo "========================================"
-          echo "Downloading Libbox.xcframework from nicolastinkl/UUVPN..."
+          echo "Downloading Libbox.xcframework from upstream..."
           echo "========================================"
 
+          cd iOS-SwiftUI-Code
+
           # 删除现有的 Libbox.xcframework（可能是空的或损坏的）
-          rm -rf iOS-SwiftUI-Code/Libbox.xcframework
+          rm -rf Libbox.xcframework
+          rm -rf LibboxLocal/Libbox.xcframework
 
           # 从上游仓库下载
           git clone --depth 1 https://github.com/nicolastinkl/UUVPN.git /tmp/upstream
 
-          # 复制 Libbox.xcframework
-          cp -r /tmp/upstream/iOS-SwiftUI-Code/Libbox.xcframework iOS-SwiftUI-Code/
+          # 复制到项目根目录（直接框架引用）
+          cp -r /tmp/upstream/iOS-SwiftUI-Code/Libbox.xcframework ./
 
-          # 检查结果
-          echo ""
-          echo "Libbox.xcframework downloaded:"
-          ls -la iOS-SwiftUI-Code/Libbox.xcframework/
-
-          # 检查文件大小
-          echo ""
-          echo "Checking file sizes..."
-          ls -la iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null || echo "ios-arm64 Libbox not found"
+          # 同时复制到 LibboxLocal 目录（XCLocalSwiftPackageReference binaryTarget 引用）
+          mkdir -p LibboxLocal
+          cp -r /tmp/upstream/iOS-SwiftUI-Code/Libbox.xcframework LibboxLocal/
 
           # 清理临时文件
           rm -rf /tmp/upstream
 
-      - name: Verify Libbox.xcframework
-        run: |
-          echo "========================================"
-          echo "Verifying Libbox.xcframework..."
-          echo "========================================"
+          # 验证两个位置的文件
+          echo ""
+          echo "=== Root Libbox.xcframework ==="
+          ls -lh Libbox.xcframework/
+          FILE_SIZE=$(stat -f%z "Libbox.xcframework/ios-arm64/Libbox.framework/Versions/A/Libbox" 2>/dev/null || stat -f%z "Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" 2>/dev/null || echo "0")
+          echo "Arm64 binary size: $FILE_SIZE bytes"
 
-          if [ -d "iOS-SwiftUI-Code/Libbox.xcframework" ]; then
-            echo "✅ Libbox.xcframework exists"
-            ls -la iOS-SwiftUI-Code/Libbox.xcframework/
+          echo ""
+          echo "=== LibboxLocal/Libbox.xcframework ==="
+          ls -lh LibboxLocal/Libbox.xcframework/
+          FILE_SIZE2=$(stat -f%z "LibboxLocal/Libbox.xcframework/ios-arm64/Libbox.framework/Versions/A/Libbox" 2>/dev/null || stat -f%z "LibboxLocal/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" 2>/dev/null || echo "0")
+          echo "Arm64 binary size: $FILE_SIZE2 bytes"
 
-            # 检查文件大小（确保是真正的二进制文件）
-            FILE_SIZE=$(stat -f%z "iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" 2>/dev/null || echo "0")
-            if [ "$FILE_SIZE" -gt 1000000 ]; then
-              echo "✅ Libbox files are valid (size: ${FILE_SIZE} bytes)"
-            else
-              echo "❌ Libbox files may be corrupted (size: ${FILE_SIZE} bytes)"
-              echo "File content:"
-              head -5 iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null || true
-            fi
+          if [ "$FILE_SIZE" -gt 1000000 ] && [ "$FILE_SIZE2" -gt 1000000 ]; then
+            echo "✅ Both Libbox.xcframework copies are valid"
           else
-            echo "❌ Libbox.xcframework not found"
+            echo "❌ Libbox.xcframework files are corrupted"
             exit 1
           fi
 
@@ -94,27 +74,16 @@ jobs:
         with:
           xcode-version: ${{ env.IOS_XCODE_VERSION }}
 
-      - name: List available schemes
+      - name: Resolve Swift Package Dependencies
         run: |
-          echo "========================================"
-          echo "Available Xcode schemes..."
-          echo "========================================"
+          cd iOS-SwiftUI-Code
+          xcodebuild -resolvePackageDependencies -project uuvpn.xcodeproj -scheme SFI
+
+      - name: Build iOS (iphoneos)
+        run: |
           cd iOS-SwiftUI-Code
 
-          # 尝试列出 schemes
-          xcodebuild -list -project uuvpn.xcodeproj 2>/dev/null || xcodebuild -list -workspace uuvpn.xcworkspace 2>/dev/null || echo "Could not list schemes"
-
-      - name: Build iOS Debug
-        if: ${{ github.event.inputs.build_debug == 'true' || github.event_name == 'push' }}
-        run: |
-          echo "========================================"
-          echo "Building iOS Debug..."
-          echo "========================================"
-
-          cd iOS-SwiftUI-Code
-
-          # 构建 Debug 版本
-          xcodebuild \
+          xcodebuild clean build \
             -project uuvpn.xcodeproj \
             -scheme SFI \
             -sdk iphoneos \
@@ -123,19 +92,19 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            build 2>&1 | tee build.log || echo "Build completed with issues"
+            SWIFT_ENABLE_EXPLICIT_MODULES=NO \
+            2>&1 | tee build.log
 
-          echo ""
-          echo "Build results:"
-          find build -name "*.app" -type d 2>/dev/null | head -5 || echo "No .app found"
+          if grep -q "BUILD SUCCEEDED" build.log; then
+            echo "✅ BUILD SUCCEEDED"
+          else
+            echo "❌ BUILD FAILED"
+            grep -i "error:" build.log || true
+            exit 1
+          fi
 
       - name: Create IPA from .app
-        if: ${{ github.event.inputs.build_debug == 'true' || github.event_name == 'push' }}
         run: |
-          echo "========================================"
-          echo "Creating IPA file..."
-          echo "========================================"
-
           cd iOS-SwiftUI-Code
 
           # 查找 .app 文件
@@ -153,38 +122,21 @@ jobs:
             ls -lh UUVPN-debug.ipa
           else
             echo "❌ No .app found, cannot create IPA"
-            echo ""
-            echo "Searching for .app files..."
             find build -name "*.app" -type d 2>/dev/null || true
+            exit 1
           fi
 
       - name: Upload IPA Artifact
-        if: ${{ github.event.inputs.build_debug == 'true' || github.event_name == 'push' }}
         uses: actions/upload-artifact@v4
         with:
           name: UUVPN-iOS-Debug
-          path: iOS-SwiftUI-Code/*.ipa
+          path: iOS-SwiftUI-Code/UUVPN-debug.ipa
           retention-days: 30
-          if-no-files-found: warn
 
       - name: Upload Build Log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Build-Log
+          name: iOS-Build-Log
           path: iOS-SwiftUI-Code/build.log
           retention-days: 7
-          if-no-files-found: ignore
-
-      - name: Build Summary
-        if: always()
-        run: |
-          echo "========================================"
-          echo "iOS Build Summary"
-          echo "========================================"
-          echo "Xcode version: $(xcodebuild -version 2>/dev/null || echo 'Unknown')"
-          echo ""
-          echo "Artifacts:"
-          ls -lh iOS-SwiftUI-Code/*.ipa 2>/dev/null || echo "No IPA files created"
-          echo ""
-          echo "Build completed!"
