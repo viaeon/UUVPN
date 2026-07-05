@@ -134,7 +134,12 @@ struct SignUp: View {
         isLoading = true
         errorMessage = nil
 
-        let loginUrl = URL(string: "\(UserManager.shared.baseURL())passport/auth/register")!
+        let loginUrl = URL(string: "\(UserManager.shared.baseURL())passport/auth/register")
+        guard let loginUrl = loginUrl else {
+            self.errorMessage = "服务器配置未加载"
+            self.isLoading = false
+            return
+        }
         var request = URLRequest(url: loginUrl)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")

@@ -140,7 +140,12 @@ struct ForgotPassword: View {
             errorMessage = nil
 
         
-        let userInfoUrl = URL(string: "\(UserManager.shared.baseURL())passport/comm/sendEmailVerify?email=\(email)&recaptcha_data=")!
+        let userInfoUrl = URL(string: "\(UserManager.shared.baseURL())passport/comm/sendEmailVerify?email=\(email)&recaptcha_data=")
+        guard let userInfoUrl = userInfoUrl else {
+            self.errorMessage = "服务器配置未加载"
+            self.isLoading = false
+            return
+        }
         var request = URLRequest(url: userInfoUrl)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")

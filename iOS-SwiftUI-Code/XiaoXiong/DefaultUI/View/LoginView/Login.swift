@@ -418,7 +418,12 @@ struct Login: View {
     
     func resetpwd(password:String)  async {
         isresetpwdLoading = true
-        let loginUrl = URL(string: "\(UserManager.shared.baseURL())passport/auth/forget?email=\(emailID)&password=\(password)&email_code=\(otpText)")!
+        let loginUrl = URL(string: "\(UserManager.shared.baseURL())passport/auth/forget?email=\(emailID)&password=\(password)&email_code=\(otpText)")
+        guard let loginUrl = loginUrl else {
+            self.errorMessage = "服务器配置未加载"
+            self.isresetpwdLoading = false
+            return
+        }
         var request = URLRequest(url: loginUrl)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -530,7 +535,7 @@ struct Login: View {
               
                 if let jsonResponse = try? JSONDecoder().decode(configReponse.self, from: data){
                    //  dump(jsonResponse)
-                    if jsonResponse.code == 1 {
+                    if jsonResponse.code == 0 || jsonResponse.code == 1 {
                         //save data
                         UserManager.shared.storebaseURLData(data: jsonResponse.baseURL)
                         UserManager.shared.storemainregisterURLData(data: jsonResponse.mainregisterURL)
@@ -561,7 +566,12 @@ struct Login: View {
         isLoading = true
         errorMessage = nil
         focusedField = false
-        let loginUrl = URL(string: "\(UserManager.shared.baseURL())passport/auth/login")!
+        let base = UserManager.shared.baseURL()
+        guard !base.isEmpty, let loginUrl = URL(string: "\(base)passport/auth/login") else {
+            self.errorMessage = "服务器配置未加载，请重启应用"
+            self.isLoading = false
+            return
+        }
         var request = URLRequest(url: loginUrl)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -635,7 +645,8 @@ struct Login: View {
     }
     
     func fetchUserInfo(token: String) async {
-        let userInfoUrl = URL(string: "\(UserManager.shared.baseURL())user/info")!
+        let userInfoUrl = URL(string: "\(UserManager.shared.baseURL())user/info")
+        guard let userInfoUrl = userInfoUrl else { return }
         var request = URLRequest(url: userInfoUrl)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
