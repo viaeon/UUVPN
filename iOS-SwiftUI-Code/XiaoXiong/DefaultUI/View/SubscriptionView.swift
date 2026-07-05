@@ -335,17 +335,28 @@ struct SubscriptionView: View {
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 self.isLoading = false
-                
+
                 if let error = error {
                     self.errorMessage = "数据请求失败： \(error.localizedDescription)"
                     return
                 }
-                
+
                 guard let data = data else {
                     self.errorMessage = "数据请求失败"
                     return
-                } 
-                
+                }
+
+                // 打印原始响应用于调试
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("Plan response: \(jsonString.prefix(500))")
+                }
+
+                // 检查 HTTP 状态码
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                    self.errorMessage = "服务器返回错误: HTTP \(httpResponse.statusCode)"
+                    return
+                }
+
                 // Parse the user info response
                do {
                    let Subscribe = try JSONDecoder().decode(PlanResponse.self, from: data)

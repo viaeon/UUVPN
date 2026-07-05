@@ -530,10 +530,10 @@ struct Login: View {
                  
                 // Parse the login response and get the authorization token
                 struct configReponse: Codable {
-                    let baseURL, mainregisterURL,paymentURL,crisptoken: String
-                    let telegramurl, kefuurl, websiteURL,baseDYURL: String
-                    let message: String
-                    let code: Int
+                    let baseURL, mainregisterURL, paymentURL, crisptoken: String?
+                    let telegramurl, kefuurl, websiteURL, baseDYURL: String?
+                    let message: String?
+                    let code: Int?
                 }
                 
                 if let jsonString = String(data: data, encoding: .utf8) {
@@ -541,18 +541,33 @@ struct Login: View {
                 }
               
                 if let jsonResponse = try? JSONDecoder().decode(configReponse.self, from: data){
-                   //  dump(jsonResponse)
                     if jsonResponse.code == 1 {
                         //save data
-                        UserManager.shared.storebaseURLData(data: jsonResponse.baseURL)
-                        UserManager.shared.storemainregisterURLData(data: jsonResponse.mainregisterURL)
-                        UserManager.shared.storepaymentURLData(data: jsonResponse.paymentURL)
-                        UserManager.shared.storetelegramUrlData(data: jsonResponse.telegramurl)
-                        UserManager.shared.storekefuUrlData(data: jsonResponse.kefuurl)
-                        UserManager.shared.storewebsiteURLData(data: jsonResponse.websiteURL)
-                        UserManager.shared.storebaseDYURL(data: jsonResponse.baseDYURL)
+                        if let baseURL = jsonResponse.baseURL {
+                            UserManager.shared.storebaseURLData(data: baseURL)
+                        }
+                        if let mainregisterURL = jsonResponse.mainregisterURL {
+                            UserManager.shared.storemainregisterURLData(data: mainregisterURL)
+                        }
+                        if let paymentURL = jsonResponse.paymentURL {
+                            UserManager.shared.storepaymentURLData(data: paymentURL)
+                        }
+                        if let telegramurl = jsonResponse.telegramurl {
+                            UserManager.shared.storetelegramUrlData(data: telegramurl)
+                        }
+                        if let kefuurl = jsonResponse.kefuurl {
+                            UserManager.shared.storekefuUrlData(data: kefuurl)
+                        }
+                        if let websiteURL = jsonResponse.websiteURL {
+                            UserManager.shared.storewebsiteURLData(data: websiteURL)
+                        }
+                        if let baseDYURL = jsonResponse.baseDYURL {
+                            UserManager.shared.storebaseDYURL(data: baseDYURL)
+                        }
                         //crisptoken
-                        CrispSDK.configure(websiteID: jsonResponse.crisptoken)
+                        if let crisptoken = jsonResponse.crisptoken {
+                            CrispSDK.configure(websiteID: crisptoken)
+                        }
                     }
                 }else{
                     DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 2) {
