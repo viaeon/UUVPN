@@ -30,6 +30,16 @@ struct nodereponseData: Codable,Identifiable {
         case cacheKey = "cache_key"
     }
 
+    // 手动构造 init（用于视图中的测试数据）
+    init(type: String? = nil, name: String? = nil, rate: String = "", id2: Int? = nil, isOnline: Int = 0, cacheKey: String? = nil) {
+        self.type = type
+        self.name = name
+        self.rate = rate
+        self.id2 = id2
+        self.isOnline = isOnline
+        self.cacheKey = cacheKey
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         type = try container.decodeIfPresent(String.self, forKey: .type)
