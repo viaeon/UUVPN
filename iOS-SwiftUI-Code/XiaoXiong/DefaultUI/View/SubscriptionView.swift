@@ -347,16 +347,17 @@ struct SubscriptionView: View {
                 } 
                 
                 // Parse the user info response
-               if let Subscribe = try? JSONDecoder().decode(PlanResponse.self, from: data) {
-                    
+               do {
+                   let Subscribe = try JSONDecoder().decode(PlanResponse.self, from: data)
+
                    if let data = Subscribe.data {
                        planList = data
                    }else{
                        self.errorMessage = Subscribe.message ?? ""
                    }
-                    
-                }else{
-                    self.errorMessage = "数据请求失败： JSON 解析错误"
+
+                } catch {
+                    self.errorMessage = "数据请求失败： \(error.localizedDescription)"
                 }
                 
                  

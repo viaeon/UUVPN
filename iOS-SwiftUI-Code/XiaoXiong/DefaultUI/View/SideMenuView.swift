@@ -349,23 +349,19 @@ struct SideMenuView: View {
                     return
                 } 
                 // Parse the user info response
-                if let Subscribe = try? JSONDecoder().decode(SubscribeReponse.self, from: data) {
-                    
+                do {
+                    let Subscribe = try JSONDecoder().decode(SubscribeReponse.self, from: data)
+
                     if let data = Subscribe.data {
-                        
                         plandes = data
                         emailid = data.email ?? ""
-                                             
                         UserManager.shared.storeUserInfo(email: emailid, avator: "")
-//                        UserManager.shared.storeSuburlData(data: data.subscribeURL)
-                        
                     }else{
                         self.errorMessage = Subscribe.message ?? ""
                     }
-                    
-                    
-                }else{
-                    self.errorMessage = "套餐数据请求失败"
+
+                } catch {
+                    self.errorMessage = "套餐数据请求失败: \(error.localizedDescription)"
                 }
             }
         }

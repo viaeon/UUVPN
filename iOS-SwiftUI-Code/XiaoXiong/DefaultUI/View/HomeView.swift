@@ -1668,7 +1668,12 @@ struct HomeView: View {
 //                      print("Response data: \(jsonString)")
 //                } 
                 // Parse the user info response
-                if let reponsesubdata = try? JSONDecoder().decode(SubscribeReponse.self, from: data), let subscript_json = reponsesubdata.data {
+                do {
+                    let reponsesubdata = try JSONDecoder().decode(SubscribeReponse.self, from: data)
+                    guard let subscript_json = reponsesubdata.data else {
+                        print("Subscribe data is nil: \(reponsesubdata.message ?? "")")
+                        return
+                    }
                     
 //                    withAnimation {
 //                        islogined = true
@@ -1754,22 +1759,10 @@ struct HomeView: View {
                         
                     }
                      
-                }else{
-                    
-                    print("LOG: 节点接口JSON解析失败，请注意. \(String(describing: error?.localizedDescription)) ")
-                    //DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1) {
-                        //Task{
-                         //   await reloadSubscribe()
-                        //}
-                   // }
+                } catch {
+                    print("LOG: 订阅接口JSON解析失败: \(error.localizedDescription)")
                     if UserManager.shared.getSuburlData().count > 5 {
-//                        withAnimation {
-//                            islogined = true
-//                            
-//                        }
-                        //commandClient.connect()
                     }
-                    //alert = Alert(errorMessage: "访问失败")
                 }
             }
             
@@ -1844,12 +1837,14 @@ struct HomeView: View {
                 }
 
                 // Parse the user info response
-                if let nodes = try? JSONDecoder().decode(nodereponse.self, from: data) {
-                    
+                do {
+                    let nodes = try JSONDecoder().decode(nodereponse.self, from: data)
+
                     if let sss = nodes.data{
-                        
                         servers = sss
                     }
+                } catch {
+                    print("LOG: 节点接口JSON解析失败: \(error.localizedDescription)")
                 }
             }
         }

@@ -667,15 +667,16 @@ struct Login: View {
                 
                
                 // Parse the user info response
-                if let userInfo = try? JSONDecoder().decode(UserInfo.self, from: data) {
+                do {
+                    let userInfo = try JSONDecoder().decode(UserInfo.self, from: data)
                     self.userInfo = userInfo
                     // Save user info to local storage
-                    
-                    
+
+
                     UserManager.shared.saveUserInfoToLocal(userInfo: userInfo)
                     UserManager.shared.storeUserInfo(email: userInfo.data?.email ?? "", avator:  userInfo.data?.avatar_url ?? "")
-                    
-                    
+
+
                     // 读取登录状态和用户信息
                     let isLoggedIn = UserManager.shared.isUserLoggedIn()
                     let userInfo = UserManager.shared.getUserInfo()
@@ -685,7 +686,9 @@ struct Login: View {
                     print("Email: \(userInfo.email), avator: \(userInfo.avator)")
                     print("Auto Data: \(autoData)")
                     self.isLoggedIn = true
-                    
+
+                } catch {
+                    self.errorMessage = "用户信息解析失败: \(error.localizedDescription)"
                 }
             }
         }
