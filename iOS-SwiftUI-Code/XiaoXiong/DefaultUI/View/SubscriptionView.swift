@@ -321,40 +321,61 @@ struct SubscriptionView: View {
     
     
     func getPlanList() async {
-        
+
         isLoading = true
         errorMessage = nil
 
-        
-        let userInfoUrl = URL(string: "\(UserManager.shared.baseURL())user/plan/fetch")!
+        let baseURLStr = UserManager.shared.baseURL()
+        let requestURLStr = "\(baseURLStr)user/plan/fetch"
+        let authData = UserManager.shared.getAutoData()
+
+        print("Plan request URL: \(requestURLStr)")
+        print("Plan auth: \(authData.prefix(20))...")
+
+        guard let userInfoUrl = URL(string: requestURLStr) else {
+            self.errorMessage = "URL格式错误: \(requestURLStr)"
+            self.isLoading = false
+            return
+        }
         var request = URLRequest(url: userInfoUrl)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.addValue(UserManager.shared.getAutoData(), forHTTPHeaderField: "Authorization")
+        request.addValue(authData, forHTTPHeaderField: "Authorization")
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 self.isLoading = false
 
                 if let error = error {
-                    self.errorMessage = "数据请求失败： \(error.localizedDescription)"
+                    self.errorMessage = "网络错误: \(error.localizedDescription)\nURL: \(requestURLStr)"
                     return
                 }
 
                 guard let data = data else {
-                    self.errorMessage = "数据请求失败"
+                    self.errorMessage = "服务器无响应\nURL: \(requestURLStr)"
                     return
                 }
 
                 // 打印原始响应用于调试
                 if let jsonString = String(data: data, encoding: .utf8) {
-                    print("Plan response: \(jsonString.prefix(500))")
+                    print("Plan response: \(jsonString.prefix(1000))")
                 }
 
                 // 检查 HTTP 状态码
-                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-                    self.errorMessage = "服务器返回错误: HTTP \(httpResponse.statusCode)"
-                    return
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("Plan HTTP status: \(httpResponse.statusCode)")
+                    if httpResponse.statusCode == 401 {
+                        self.errorMessage = "认证失败，请重新登录"
+                        return
+                    }
+                    if httpResponse.statusCode == 403 {
+                        self.errorMessage = "无权限访问(403)，Authorization格式可能错误"
+                        return
+                    }
+                    if httpResponse.statusCode != 200 {
+                        self.errorMessage = "服务器返回错误: HTTP \(httpResponse.statusCode)"
+                        return
+                    }
                 }
 
                 // Parse the user info response
@@ -364,14 +385,20 @@ struct SubscriptionView: View {
                    if let data = Subscribe.data {
                        planList = data
                    }else{
-                       self.errorMessage = Subscribe.message ?? ""
+                       self.errorMessage = Subscribe.message ?? "无套餐数据"
                    }
 
                 } catch {
-                    self.errorMessage = "数据请求失败： \(error.localizedDescription)"
+                    print("Plan decode error: \(error)")
+                    if let jsonString = String(data: data, encoding: .utf8) {
+                        print("Plan raw data: \(jsonString.prefix(500))")
+                        self.errorMessage = "数据解析失败: \(error.localizedDescription)\n原始数据: \(jsonString.prefix(200))"
+                    } else {
+                        self.errorMessage = "数据解析失败: \(error.localizedDescription)"
+                    }
                 }
-                
-                 
+
+
             }
         }
 

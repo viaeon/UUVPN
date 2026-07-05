@@ -540,7 +540,9 @@ struct Login: View {
                     print("Response data: \(jsonString)")
                 }
               
-                if let jsonResponse = try? JSONDecoder().decode(configReponse.self, from: data){
+                do {
+                    let jsonResponse = try JSONDecoder().decode(configReponse.self, from: data)
+                    print("Login Config decoded: code=\(jsonResponse.code ?? -1), baseURL=\(jsonResponse.baseURL ?? "nil")")
                     if jsonResponse.code == 1 {
                         //save data
                         if let baseURL = jsonResponse.baseURL {
@@ -568,8 +570,11 @@ struct Login: View {
                         if let crisptoken = jsonResponse.crisptoken {
                             CrispSDK.configure(websiteID: crisptoken)
                         }
+                    } else {
+                        print("Login Config code != 1 (got \(jsonResponse.code ?? -1)), using fallback baseURL")
                     }
-                }else{
+                } catch {
+                    print("Login Config decode error: \(error)")
                     DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 2) {
                         Task{
                             await getConfig()

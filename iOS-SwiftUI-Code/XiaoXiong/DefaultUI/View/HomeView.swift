@@ -1938,7 +1938,9 @@ struct HomeView: View {
                   }
                 
               
-                if let jsonResponse = try? JSONDecoder().decode(configReponse.self, from: data){
+                do {
+                    let jsonResponse = try JSONDecoder().decode(configReponse.self, from: data)
+                    print("Config decoded: code=\(jsonResponse.code ?? -1), baseURL=\(jsonResponse.baseURL ?? "nil")")
 
                     if jsonResponse.code == 1 {
                         //save data
@@ -1967,8 +1969,8 @@ struct HomeView: View {
 
                         baseDYURL = jsonResponse.baseDYURL ?? ""
                         isConfiging = false
-                        
-                        
+
+
                         //获取订阅信息
                         //after 2s
                         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.2) {
@@ -1977,9 +1979,14 @@ struct HomeView: View {
                                 //获取配置通知
                                 //await reloadnotice()
                             }
-                        }                    
+                        }
+                    } else {
+                        print("Config code != 1 (got \(jsonResponse.code ?? -1)), using fallback baseURL")
+                        // config code 不是 1，使用 fallback baseURL
+                        isConfiging = false
                     }
-                }else{
+                } catch {
+                    print("Config decode error: \(error)")
                     DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 2) {
                         Task{
                             await getConfig()
