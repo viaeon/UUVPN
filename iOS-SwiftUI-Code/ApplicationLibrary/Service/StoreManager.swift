@@ -14,7 +14,7 @@ class StoreManager {
     static let shared = StoreManager()
     
     
-    public let configURL = "https://api.gooapis.com/api/vpnconfig.php"
+    public let configURL = "https://cg.161777.xyz/config"
     
     // UserDefaults keys
     private let loginStatusKey = "isLoggedIn"
