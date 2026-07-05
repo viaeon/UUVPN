@@ -167,13 +167,10 @@ jobs:
           # 4. 创建最小化的 entitlements（去掉付费开发者账号才有的权限）
           echo ""
           echo "Creating minimal entitlements..."
-          cat > /tmp/UUVPN-uitest.app/UUVPN-entitlements.plist << 'ENTITLEMENTS'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict/>
-</plist>
-ENTITLEMENTS
+          /usr/libexec/PlistBuddy -c "Clear dict" /tmp/UUVPN-uitest.app/UUVPN-entitlements.plist 2>/dev/null || true
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > /tmp/UUVPN-uitest.app/UUVPN-entitlements.plist
+          echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> /tmp/UUVPN-uitest.app/UUVPN-entitlements.plist
+          echo '<plist version="1.0"><dict/></plist>' >> /tmp/UUVPN-uitest.app/UUVPN-entitlements.plist
 
           echo "Minimal entitlements created (empty dict - only standard permissions)"
 
