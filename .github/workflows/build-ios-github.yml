@@ -23,6 +23,8 @@ on:
 env:
   IOS_XCODE_VERSION: "16.0"
   IOS_DEPLOYMENT_TARGET: "15.0"
+  # Gitea LFS 配置
+  GITEA_TOKEN: "73ffc0f4391a26bb327fbed379d63b5a087e5f10"
 
 jobs:
   build-ios:
@@ -30,45 +32,89 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (without LFS)
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
-          lfs: true
+          lfs: false
+
+      - name: Setup Git LFS and download from Gitea
+        run: |
+          echo "========================================"
+          echo "Configuring Git LFS to use Gitea..."
+          echo "========================================"
+
+          # 安装 Git LFS
+          brew install git-lfs || true
+          git lfs install
+
+          # 配置 LFS 使用 Gitea 服务器（带认证）
+          git config --global lfs.url "https://admin:${{ env.GITEA_TOKEN }}@git.viaeon.com/admin/UUVPN.git/info/lfs"
+
+          echo ""
+          echo "Downloading LFS files from Gitea..."
+          git lfs pull 2>&1 || echo "LFS pull failed, trying alternative method..."
+
+          # 如果失败，尝试 fetch + checkout
+          git lfs fetch origin 2>&1 || true
+          git lfs checkout 2>&1 || true
+
+      - name: Verify Libbox.xcframework
+        run: |
+          echo "========================================"
+          echo "Checking Libbox.xcframework..."
+          echo "========================================"
+
+          ls -la iOS-SwiftUI-Code/Libbox.xcframework/ || echo "Libbox.xcframework not found"
+
+          # 检查框架内容
+          if [ -d "iOS-SwiftUI-Code/Libbox.xcframework" ]; then
+            echo "✅ Libbox.xcframework directory exists"
+            ls -la iOS-SwiftUI-Code/Libbox.xcframework/
+
+            # 检查文件大小（确保是真正的二进制文件，不是 LFS 指针）
+            echo ""
+            echo "Checking file sizes..."
+            ls -la iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null || echo "ios-arm64 Libbox not found"
+
+            # 检查是否是 LFS 指针
+            FILE_SIZE=$(stat -f%z "iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" 2>/dev/null || echo "0")
+            if [ "$FILE_SIZE" -gt 100 ]; then
+              echo "✅ LFS files downloaded successfully (size: ${FILE_SIZE} bytes)"
+            else
+              echo "❌ LFS files are still pointers (size: ${FILE_SIZE} bytes)"
+              echo "File content:"
+              head -5 iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null || true
+            fi
+          else
+            echo "❌ Libbox.xcframework not found"
+            exit 1
+          fi
 
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ env.IOS_XCODE_VERSION }}
 
-      - name: Check Libbox.xcframework
+      - name: List available schemes
         run: |
           echo "========================================"
-          echo "Checking Libbox.xcframework..."
+          echo "Available Xcode schemes..."
           echo "========================================"
-          ls -la iOS-SwiftUI-Code/Libbox.xcframework/ || echo "Libbox.xcframework not found"
+          cd iOS-SwiftUI-Code
 
-          # 检查框架内容
-          if [ -d "iOS-SwiftUI-Code/Libbox.xcframework" ]; then
-            echo "✅ Libbox.xcframework exists"
-            ls -la iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/ || true
-          else
-            echo "❌ Libbox.xcframework not found"
-            exit 1
-          fi
+          # 尝试列出 schemes
+          xcodebuild -list -project uuvpn.xcodeproj 2>/dev/null || xcodebuild -list -workspace uuvpn.xcworkspace 2>/dev/null || echo "Could not list schemes"
 
-      - name: Build iOS Debug IPA
+      - name: Build iOS Debug
         if: ${{ github.event.inputs.build_debug == 'true' || github.event_name == 'push' }}
         run: |
           echo "========================================"
-          echo "Building iOS Debug IPA..."
+          echo "Building iOS Debug..."
           echo "========================================"
 
           cd iOS-SwiftUI-Code
-
-          # 列出可用的 scheme
-          xcodebuild -list -project uuvpn.xcodeproj || xcodebuild -list -workspace uuvpn.xcworkspace || true
 
           # 构建 Debug 版本
           xcodebuild \
@@ -77,17 +123,14 @@ jobs:
             -sdk iphoneos \
             -configuration Debug \
             -derivedDataPath build \
-            -archivePath build/archive \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            build | tee build.log || echo "Build may have issues"
+            build 2>&1 | tee build.log || echo "Build completed with issues"
 
-          # 检查构建结果
           echo ""
           echo "Build results:"
-          find build -name "*.app" -type d 2>/dev/null || echo "No .app found"
-          find build -name "*.ipa" -type f 2>/dev/null || echo "No .ipa found"
+          find build -name "*.app" -type d 2>/dev/null | head -5 || echo "No .app found"
 
       - name: Create IPA from .app
         if: ${{ github.event.inputs.build_debug == 'true' || github.event_name == 'push' }}
@@ -99,7 +142,7 @@ jobs:
           cd iOS-SwiftUI-Code
 
           # 查找 .app 文件
-          APP_PATH=$(find build -name "*.app" -type d | head -1)
+          APP_PATH=$(find build -name "*.app" -type d | grep -v "Watch" | head -1)
 
           if [ -n "$APP_PATH" ] && [ -d "$APP_PATH" ]; then
             echo "Found .app at: $APP_PATH"
@@ -110,24 +153,12 @@ jobs:
             zip -r "UUVPN-debug.ipa" Payload
 
             echo "✅ IPA created: UUVPN-debug.ipa"
-            ls -la UUVPN-debug.ipa
+            ls -lh UUVPN-debug.ipa
           else
             echo "❌ No .app found, cannot create IPA"
-
-            # 尝试直接使用 xcodebuild 的 archive 功能
             echo ""
-            echo "Attempting alternative archive method..."
-
-            xcodebuild \
-              -project uuvpn.xcodeproj \
-              -scheme SFI \
-              -sdk iphoneos \
-              -configuration Debug \
-              -archivePath build/UUVPN.xcarchive \
-              archive \
-              CODE_SIGN_IDENTITY="" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO || echo "Archive failed"
+            echo "Searching for .app files..."
+            find build -name "*.app" -type d 2>/dev/null || true
           fi
 
       - name: Upload IPA Artifact
@@ -137,6 +168,7 @@ jobs:
           name: UUVPN-iOS-Debug
           path: iOS-SwiftUI-Code/*.ipa
           retention-days: 30
+          if-no-files-found: warn
 
       - name: Upload Build Log
         if: always()
@@ -145,6 +177,7 @@ jobs:
           name: Build-Log
           path: iOS-SwiftUI-Code/build.log
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Build Summary
         if: always()
@@ -152,9 +185,9 @@ jobs:
           echo "========================================"
           echo "iOS Build Summary"
           echo "========================================"
-          echo "Xcode version: $(xcodebuild -version)"
+          echo "Xcode version: $(xcodebuild -version 2>/dev/null || echo 'Unknown')"
           echo ""
           echo "Artifacts:"
-          ls -la iOS-SwiftUI-Code/*.ipa 2>/dev/null || echo "No IPA files"
+          ls -lh iOS-SwiftUI-Code/*.ipa 2>/dev/null || echo "No IPA files created"
           echo ""
           echo "Build completed!"
