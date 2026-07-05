@@ -153,12 +153,10 @@ jobs:
           rm -rf /tmp/UUVPN-uitest.app/PlugIns
           echo "PlugIns removed"
 
-          # ===== 第2步：删除所有签名相关文件 =====
+          # ===== 第2步：删除签名残留文件 =====
           echo ""
           echo "=== Step 2: Removing signature artifacts ==="
           rm -f /tmp/UUVPN-uitest.app/archived-expanded-entitlements.xcent 2>/dev/null || true
-          rm -rf /tmp/UUVPN-uitest.app/_CodeSignature 2>/dev/null || true
-          # 删除嵌入的 provisioning profile
           rm -f /tmp/UUVPN-uitest.app/embedded.mobileprovision 2>/dev/null || true
           echo "Signature artifacts removed"
 
@@ -172,21 +170,63 @@ jobs:
           /usr/libexec/PlistBuddy -c "Delete :NSExtension" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null || true
           /usr/libexec/PlistBuddy -c "Delete :UIBackgroundModes" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null || true
           /usr/libexec/PlistBuddy -c "Delete :BGTaskSchedulerPermittedIdentifiers" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null || true
-          # 移除 iCloud 容器配置（需要 iCloud 权限）
           /usr/libexec/PlistBuddy -c "Delete :NSUbiquitousContainers" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null || true
-          # 移除应用服务声明（可能触发权限检查）
           /usr/libexec/PlistBuddy -c "Delete :NSApplicationServices" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null || true
 
           echo ""
           echo "Info.plist AFTER cleanup:"
           /usr/libexec/PlistBuddy -c "Print" /tmp/UUVPN-uitest.app/Info.plist 2>/dev/null | head -60 || true
 
-          # ===== 第4步：不做任何 codesign =====
-          # 关键：不使用 codesign，让 Sideloadly 从零签名
-          # 之前的 ad-hoc 签名会与 Sideloadly/爱思助手的重签冲突
+          # ===== 第4步：用正确方式创建空 entitlements 并 ad-hoc 签名 =====
+          # 关键：必须签名，否则 iOS 报"无法验证其完整性"
+          # 之前失败是因为 PlistBuddy -c 'Add :dict' 创建了格式错误的 plist
+          # 正确做法：直接用 XML 写入空 dict plist
           echo ""
-          echo "=== Step 4: Skipping codesign (Sideloadly will handle signing) ==="
-          echo "App is UNSIGNED - this is intentional for Sideloadly compatibility"
+          echo "=== Step 4: Ad-hoc signing with empty entitlements ==="
+
+          # 创建正确的空 entitlements plist（直接写 XML，不用 PlistBuddy）
+          cat > /tmp/minimal-entitlements.plist << 'PLISTEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict/>
+</plist>
+PLISTEOF
+
+          echo "Minimal entitlements plist created:"
+          cat /tmp/minimal-entitlements.plist
+
+          # 先签所有嵌入的 framework（从内到外）
+          echo ""
+          echo "Signing embedded frameworks..."
+          for framework in /tmp/UUVPN-uitest.app/Frameworks/*.framework; do
+            if [ -d "$framework" ]; then
+              echo "  Signing: $framework"
+              codesign --force -s - "$framework" 2>&1 || echo "  WARNING: Failed to sign $framework"
+            fi
+          done
+          for dylib in /tmp/UUVPN-uitest.app/Frameworks/*.dylib; do
+            if [ -f "$dylib" ]; then
+              echo "  Signing: $dylib"
+              codesign --force -s - "$dylib" 2>&1 || echo "  WARNING: Failed to sign $dylib"
+            fi
+          done
+
+          # 再签主 app（带空 entitlements）
+          echo ""
+          echo "Signing main app with empty entitlements..."
+          codesign --entitlements /tmp/minimal-entitlements.plist --force --deep -s - /tmp/UUVPN-uitest.app 2>&1
+
+          # 验证签名
+          echo ""
+          echo "Verifying signature..."
+          codesign -dvv /tmp/UUVPN-uitest.app 2>&1 | head -20 || true
+          echo ""
+          echo "Current entitlements (should be empty):"
+          codesign -d --entitlements :- /tmp/UUVPN-uitest.app 2>&1 || true
+          echo ""
+          echo "Verify result:"
+          codesign --verify --deep --strict /tmp/UUVPN-uitest.app 2>&1 && echo "✅ Signature valid" || echo "❌ Signature invalid"
 
           # ===== 第5步：验证 .app 结构 =====
           echo ""
@@ -196,12 +236,6 @@ jobs:
           echo ""
           echo "Frameworks:"
           ls -la /tmp/UUVPN-uitest.app/Frameworks/ 2>/dev/null || echo "  No Frameworks directory"
-          echo ""
-          echo "PlugIns (should be empty/missing):"
-          ls -la /tmp/UUVPN-uitest.app/PlugIns/ 2>/dev/null || echo "  No PlugIns directory (correct)"
-          echo ""
-          echo "_CodeSignature (should be missing):"
-          ls -la /tmp/UUVPN-uitest.app/_CodeSignature/ 2>/dev/null || echo "  No _CodeSignature directory (correct)"
 
           # ===== 第6步：创建 IPA =====
           mkdir -p Payload
