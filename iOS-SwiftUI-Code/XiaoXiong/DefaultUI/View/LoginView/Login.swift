@@ -24,9 +24,9 @@ struct LoginResponseSuccess: Codable {
 
 // MARK: - DataClass
 struct LoginResponseSuccessClass: Codable {
-    let token: String
+    let token: String?
     let isAdmin: Int?
-    let authData: String
+    let authData: String?
 
     enum CodingKeys: String, CodingKey {
         case token
@@ -601,39 +601,33 @@ struct Login: View {
                 
                  
                 // Parse the login response and get the authorization token
-                if let jsonResponse = try? JSONDecoder().decode(LoginResponseSuccess.self, from: data){
-                    dump(jsonResponse)
-                    
-                    if let  _ = jsonResponse.errors, let message = jsonResponse.message{
-                         // Proceed to fetch user info
-                         // fetchUserInfo(token: token)
+                do {
+                    let jsonResponse = try JSONDecoder().decode(LoginResponseSuccess.self, from: data)
+
+                    if let _ = jsonResponse.errors, let message = jsonResponse.message {
                          self.errorMessage = "\(message)"
-                    }else{
-                        if  let authData = jsonResponse.data?.authData {
-                            
+                    } else {
+                        if let authData = jsonResponse.data?.authData {
                             UserManager.shared.updateLoginStatus(true)
                             UserManager.shared.storeAutoData(data: authData)
                             self.okMessage = "登录成功,正在跳转..."
                             self.isLoading = true
-                            
-                            
-                            UserManager.shared.storeUserInfo(email: emailID, avator:  "")
-                            
+
+                            UserManager.shared.storeUserInfo(email: emailID, avator: "")
+
                             DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1) {
                                 self.isLoggedIn = true
                             }
-                            //去掉记录
-//                            Task{
-//                                await fetchUserInfo(token: authData)
-//                            }
-                        }else{
+                        } else {
                             if let message = jsonResponse.message {
                                 self.errorMessage = "\(message)"
+                            } else {
+                                self.errorMessage = "登录失败: 未知错误"
                             }
                         }
                     }
-                }else{
-                    self.errorMessage = "登录失败: 数据 json 格式错误"
+                } catch {
+                    self.errorMessage = "登录失败: \(error.localizedDescription)"
                 }
                 //{"data":{"token":"880e8785746c0bf72b2e01a882a678e7","is_admin":1,"auth_data":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6Miwic2Vzc2lvbiI6Ijc4MzE1Yjc5YmNlNTliYWIzOTg5MTIzMTFhNDkwN2NiIn0.00fdwJ85bOSycfnkOPmhF7pSR1VV9WczBEeE9aXncQQ"}}
 
