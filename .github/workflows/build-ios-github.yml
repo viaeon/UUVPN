@@ -23,8 +23,6 @@ on:
 env:
   IOS_XCODE_VERSION: "16.0"
   IOS_DEPLOYMENT_TARGET: "15.0"
-  # Gitea LFS 配置
-  GITEA_TOKEN: "73ffc0f4391a26bb327fbed379d63b5a087e5f10"
 
 jobs:
   build-ios:
@@ -32,58 +30,57 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout repository (without LFS)
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
-          lfs: false
+          lfs: true
 
-      - name: Setup Git LFS and download from Gitea
+      - name: Download Libbox.xcframework from upstream
         run: |
           echo "========================================"
-          echo "Configuring Git LFS to use Gitea..."
+          echo "Downloading Libbox.xcframework from nicolastinkl/UUVPN..."
           echo "========================================"
 
-          # 安装 Git LFS
-          brew install git-lfs || true
-          git lfs install
+          # 删除现有的 Libbox.xcframework（可能是空的或损坏的）
+          rm -rf iOS-SwiftUI-Code/Libbox.xcframework
 
-          # 配置 LFS 使用 Gitea 服务器（带认证）
-          git config --global lfs.url "https://admin:${{ env.GITEA_TOKEN }}@git.viaeon.com/admin/UUVPN.git/info/lfs"
+          # 从上游仓库下载
+          git clone --depth 1 https://github.com/nicolastinkl/UUVPN.git /tmp/upstream
 
+          # 复制 Libbox.xcframework
+          cp -r /tmp/upstream/iOS-SwiftUI-Code/Libbox.xcframework iOS-SwiftUI-Code/
+
+          # 检查结果
           echo ""
-          echo "Downloading LFS files from Gitea..."
-          git lfs pull 2>&1 || echo "LFS pull failed, trying alternative method..."
+          echo "Libbox.xcframework downloaded:"
+          ls -la iOS-SwiftUI-Code/Libbox.xcframework/
 
-          # 如果失败，尝试 fetch + checkout
-          git lfs fetch origin 2>&1 || true
-          git lfs checkout 2>&1 || true
+          # 检查文件大小
+          echo ""
+          echo "Checking file sizes..."
+          ls -la iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null || echo "ios-arm64 Libbox not found"
+
+          # 清理临时文件
+          rm -rf /tmp/upstream
 
       - name: Verify Libbox.xcframework
         run: |
           echo "========================================"
-          echo "Checking Libbox.xcframework..."
+          echo "Verifying Libbox.xcframework..."
           echo "========================================"
 
-          ls -la iOS-SwiftUI-Code/Libbox.xcframework/ || echo "Libbox.xcframework not found"
-
-          # 检查框架内容
           if [ -d "iOS-SwiftUI-Code/Libbox.xcframework" ]; then
-            echo "✅ Libbox.xcframework directory exists"
+            echo "✅ Libbox.xcframework exists"
             ls -la iOS-SwiftUI-Code/Libbox.xcframework/
 
-            # 检查文件大小（确保是真正的二进制文件，不是 LFS 指针）
-            echo ""
-            echo "Checking file sizes..."
-            ls -la iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null || echo "ios-arm64 Libbox not found"
-
-            # 检查是否是 LFS 指针
+            # 检查文件大小（确保是真正的二进制文件）
             FILE_SIZE=$(stat -f%z "iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox" 2>/dev/null || echo "0")
-            if [ "$FILE_SIZE" -gt 100 ]; then
-              echo "✅ LFS files downloaded successfully (size: ${FILE_SIZE} bytes)"
+            if [ "$FILE_SIZE" -gt 1000000 ]; then
+              echo "✅ Libbox files are valid (size: ${FILE_SIZE} bytes)"
             else
-              echo "❌ LFS files are still pointers (size: ${FILE_SIZE} bytes)"
+              echo "❌ Libbox files may be corrupted (size: ${FILE_SIZE} bytes)"
               echo "File content:"
               head -5 iOS-SwiftUI-Code/Libbox.xcframework/ios-arm64/Libbox.framework/Libbox 2>/dev/null || true
             fi
