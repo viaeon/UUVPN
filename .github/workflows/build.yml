@@ -1,6 +1,12 @@
 name: Build X连接
 
 on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'Android-kotlin-Code/**'
+      - '.github/workflows/build.yml'
   workflow_dispatch:
     inputs:
       build_android:
@@ -28,6 +34,8 @@ env:
   ANDROID_BUILD_TOOLS: "33.0.0"
   ANDROID_TARGET_SDK: "33"
   ANDROID_JDK_VERSION: "17"
+  # 构建类型：push 时默认 debug，workflow_dispatch 时按输入选择
+  ANDROID_BUILD_TYPE: ${{ github.event_name == 'push' && 'debug' || github.event.inputs.android_build_type }}
 
   # iOS 配置
   IOS_XCODE_VERSION: "16.0"
@@ -38,7 +46,7 @@ jobs:
   build-android:
     name: Build Android APK
     runs-on: ubuntu
-    if: ${{ github.event.inputs.build_android != 'false' }}
+    if: ${{ github.event_name == 'push' || github.event.inputs.build_android != 'false' }}
     env:
       RUNNER_TOOL_CACHE: /toolcache
 
@@ -131,7 +139,7 @@ jobs:
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
       - name: Create signing.properties (Debug)
-        if: ${{ github.event.inputs.android_build_type != 'release' }}
+        if: ${{ env.ANDROID_BUILD_TYPE != 'release' }}
         run: |
           cd Android-kotlin-Code
           echo "keystore.path=debug.keystore" > signing.properties
@@ -140,7 +148,7 @@ jobs:
           echo "key.password=android" >> signing.properties
 
       - name: Create signing.properties (Release)
-        if: ${{ github.event.inputs.android_build_type == 'release' }}
+        if: ${{ env.ANDROID_BUILD_TYPE == 'release' }}
         run: |
           cd Android-kotlin-Code
           echo "keystore.path=release.keystore" > signing.properties
@@ -149,19 +157,19 @@ jobs:
           echo "key.password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> signing.properties
 
       - name: Decode Android keystore (Release)
-        if: ${{ github.event.inputs.android_build_type == 'release' }}
+        if: ${{ env.ANDROID_BUILD_TYPE == 'release' }}
         run: |
           cd Android-kotlin-Code
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
 
       - name: Build Android Debug APK
-        if: ${{ github.event.inputs.android_build_type != 'release' }}
+        if: ${{ env.ANDROID_BUILD_TYPE != 'release' }}
         run: |
           cd Android-kotlin-Code
           ./gradlew assembleAlphaDebug --stacktrace
 
       - name: Build Android Release APK
-        if: ${{ github.event.inputs.android_build_type == 'release' }}
+        if: ${{ env.ANDROID_BUILD_TYPE == 'release' }}
         run: |
           cd Android-kotlin-Code
           ./gradlew assembleAlphaRelease --stacktrace
@@ -177,8 +185,7 @@ jobs:
       - name: Get APK filename
         id: apk_name
         run: |
-          BUILD_TYPE="${{ github.event.inputs.android_build_type }}"
-          if [ "$BUILD_TYPE" = "release" ]; then
+          if [ "${{ env.ANDROID_BUILD_TYPE }}" = "release" ]; then
             APK_NAME="X连接-Android-Release-${{ github.sha }}.apk"
           else
             APK_NAME="X连接-Android-Debug-${{ github.sha }}.apk"
