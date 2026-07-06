@@ -186,7 +186,7 @@
             android:name=".SplashActivity"
             android:configChanges="uiMode"
             android:exported="true"
-            android:theme="@style/SplashTheme">
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
