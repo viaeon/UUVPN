@@ -38,10 +38,17 @@ class UserManager {
         if url.isEmpty {
             return "https://x.161777.xyz/api/v1/"
         }
-        if !url.hasPrefix("http://") && !url.hasPrefix("https://") {
-            return "https://\(url)"
+        var finalURL = url
+        if !finalURL.hasPrefix("http://") && !finalURL.hasPrefix("https://") {
+            finalURL = "https://\(finalURL)"
         }
-        return url
+        // 确保包含 /api/v1/ 路径前缀
+        if !finalURL.hasSuffix("/api/v1/") {
+            var base = finalURL
+            if base.hasSuffix("/") { base = String(base.dropLast()) }
+            finalURL = "\(base)/api/v1/"
+        }
+        return finalURL
     }
     
     func baseDYURL()-> String{

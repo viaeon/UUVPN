@@ -388,14 +388,30 @@ struct SubscriptionView: View {
                        self.errorMessage = Subscribe.message ?? "无套餐数据"
                    }
 
+                } catch let decodingError as DecodingError {
+                    var detail = ""
+                    switch decodingError {
+                    case .typeMismatch(let type, let context):
+                        detail = "类型不匹配: 期望\(type), 路径: \(context.codingPath.map(\.stringValue).joined(separator: "."))"
+                    case .keyNotFound(let key, let context):
+                        detail = "缺少字段: \(key.stringValue), 路径: \(context.codingPath.map(\.stringValue).joined(separator: "."))"
+                    case .valueNotFound(let type, let context):
+                        detail = "值为空: 期望\(type), 路径: \(context.codingPath.map(\.stringValue).joined(separator: "."))"
+                    case .dataCorrupted(let context):
+                        detail = "数据损坏: \(context.debugDescription), 路径: \(context.codingPath.map(\.stringValue).joined(separator: "."))"
+                    @unknown default:
+                        detail = "\(decodingError)"
+                    }
+                    print("Plan DecodingError: \(detail)")
+                    if let jsonString = String(data: data, encoding: .utf8) {
+                        print("Plan raw data: \(jsonString.prefix(1000))")
+                        self.errorMessage = "解析失败: \(detail)\nURL: \(requestURLStr)"
+                    } else {
+                        self.errorMessage = "解析失败: \(detail)\nURL: \(requestURLStr)"
+                    }
                 } catch {
                     print("Plan decode error: \(error)")
-                    if let jsonString = String(data: data, encoding: .utf8) {
-                        print("Plan raw data: \(jsonString.prefix(500))")
-                        self.errorMessage = "数据解析失败: \(error.localizedDescription)\n原始数据: \(jsonString.prefix(200))"
-                    } else {
-                        self.errorMessage = "数据解析失败: \(error.localizedDescription)"
-                    }
+                    self.errorMessage = "请求失败: \(error.localizedDescription)\nURL: \(requestURLStr)"
                 }
 
 
