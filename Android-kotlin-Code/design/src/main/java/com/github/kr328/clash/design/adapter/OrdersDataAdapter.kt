@@ -4,12 +4,10 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.HorizontalScrollView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.github.kr328.clash.design.R
 import com.github.kr328.clash.network.OrderData
-import com.github.kr328.clash.network.PlanData
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -19,7 +17,7 @@ class OrdersDataAdapter(private val onItemClick: (plan: OrderData) -> Unit ) : R
     private val subscriptions = mutableListOf<OrderData>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OrdersDataAdapterViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.activity_item_subscription, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.activity_item_order, parent, false)
         return OrdersDataAdapterViewHolder(view)
     }
 
@@ -60,8 +58,6 @@ class OrdersDataAdapterViewHolder(itemView: View) : RecyclerView.ViewHolder(item
     private val subscriptionAmount: TextView = itemView.findViewById(R.id.subscriptionAmount)
     private val subscriptionStatus: TextView = itemView.findViewById(R.id.subscriptionStatus)
 
-    private val groups_Scrollview: HorizontalScrollView = itemView.findViewById(R.id.groups_Scrollview)
-
 
     fun formatTimestamp(timestamp: Long): String {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())  // 定义格式
@@ -80,12 +76,12 @@ class OrdersDataAdapterViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         val amount = (data.total_amount ?: 0).toDouble() / 100
         subscriptionAmount.text = " ¥${String.format("%.2f", amount)}"
 
-        groups_Scrollview.visibility = View.GONE
-
-
-        //// 如果需要加载图片，可以使用图像加载库，如 Glide 或 Picasso
-        //        Glide.with(itemView.context)
-        //            .load(subscription.planImageUrl)
-        //            .into(planImage)
+        // 根据状态设置颜色
+        when (data.status) {
+            0 -> subscriptionStatus.setTextColor(0xFFFF5722.toInt()) // 待支付 - 橙色
+            1, 3 -> subscriptionStatus.setTextColor(0xFF4CAF50.toInt()) // 已支付 - 绿色
+            2 -> subscriptionStatus.setTextColor(0xFF9E9E9E.toInt()) // 已取消 - 灰色
+            else -> subscriptionStatus.setTextColor(0xFF9E9E9E.toInt())
+        }
     }
 }
