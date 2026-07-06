@@ -77,8 +77,8 @@ class OrdersDataAdapterViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         plantime.text = formatTimestamp((data.created_at ?: 0 ) * 1000L)
 
         subscriptionStatus.text = data.statusZh
-        val formattedAmount =  data.total_amount?.div(100)
-        subscriptionAmount.text = " ¥${formattedAmount}"
+        val amount = (data.total_amount ?: 0).toDouble() / 100
+        subscriptionAmount.text = " ¥${String.format("%.2f", amount)}"
 
         groups_Scrollview.visibility = View.GONE
 
