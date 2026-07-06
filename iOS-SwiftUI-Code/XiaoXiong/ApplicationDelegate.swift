@@ -5,7 +5,7 @@ import Library
 import Network
 import UIKit
 
-/// UUVPN应用代理
+/// X连接应用代理
 /// 管理应用生命周期、后台任务和VPN配置
 class ApplicationDelegate: NSObject, UIApplicationDelegate {
     /// 配置文件服务器（仅iOS 16+）

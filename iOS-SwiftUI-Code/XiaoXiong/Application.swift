@@ -2,7 +2,7 @@ import Foundation
 import Library
 import SwiftUI
 
-/// UUVPN iOS应用程序入口点
+/// X连接 iOS应用程序入口点
 /// 管理应用生命周期和视图路由，根据登录状态显示相应界面
 @main
 struct Application: App {

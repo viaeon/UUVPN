@@ -55,7 +55,7 @@ struct SettingsAboutView: View {
                         .foregroundColor(.orange) // 使用系统图标，实际图标替换时可以用 Image("logo")
                     
                   
-                    Text("UUVPN for iOS \n在您的 iPhone 和 iPad 上体验最快的全球网络连接工具")
+                    Text("X连接 for iOS \n在您的 iPhone 和 iPad 上体验最快的全球网络连接工具")
                         .font(.subheadline)                        
                         .padding(.top, 10)
                         .frame(width: 300)
@@ -156,7 +156,7 @@ struct SettingsAboutView: View {
                     }
                     .padding(.horizontal)
                     
-                    Text("Copyright 2014 - 2024, UUVPN 版权所有")
+                    Text("Copyright 2014 - 2024, X连接 版权所有")
                         .font(.footnote)
                         .foregroundColor(.gray)
                         .padding(.top, 5)

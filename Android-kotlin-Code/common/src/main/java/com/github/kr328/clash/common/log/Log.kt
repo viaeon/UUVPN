@@ -1,7 +1,7 @@
 package com.github.kr328.clash.common.log
 
 object Log {
-    private const val TAG = "UUVPN"
+    private const val TAG = "X连接"
 
     fun i(message: String, throwable: Throwable? = null) =
         android.util.Log.i(TAG, message, throwable)

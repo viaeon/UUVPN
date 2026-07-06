@@ -8,10 +8,10 @@ public enum Variant {
     #endif
 
     #if os(iOS)
-        public static let applicationName = "UUVPN"
+        public static let applicationName = "X连接"
     #elseif os(macOS)
-        public static let applicationName = "UUVPN"
+        public static let applicationName = "X连接"
     #elseif os(tvOS)
-        public static let applicationName = "UUVPN"
+        public static let applicationName = "X连接"
     #endif
 }

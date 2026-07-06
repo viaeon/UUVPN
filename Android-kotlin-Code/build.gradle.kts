@@ -62,7 +62,7 @@ subprojects {
             if (!isApp) {
                 consumerProguardFiles("consumer-rules.pro")
             } else {
-                setProperty("archivesBaseName", "UUVPN-$versionName")
+                setProperty("archivesBaseName", "X连接-$versionName")
             }
         }
 
@@ -88,8 +88,8 @@ subprojects {
 
                 buildConfigField("boolean", "PREMIUM", "Boolean.parseBoolean(\"false\")")
 
-                resValue("string", "launch_name", "UUVPN")
-                resValue("string", "application_name", "UUVPN")
+                resValue("string", "launch_name", "X连接")
+                resValue("string", "application_name", "X连接")
 
                 if (isApp) {
                     applicationIdSuffix = ".alpha"
@@ -103,8 +103,8 @@ subprojects {
 
                 buildConfigField("boolean", "PREMIUM", "Boolean.parseBoolean(\"false\")")
 
-                resValue("string", "launch_name", "UUVPN")//@string/launch_name_meta
-                resValue("string", "application_name", "UUVPN")//@string/application_name_meta
+                resValue("string", "launch_name", "X连接")//@string/launch_name_meta
+                resValue("string", "application_name", "X连接")//@string/application_name_meta
 
                 if (isApp) {
                    // applicationIdSuffix = ".meta"
