@@ -57,6 +57,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.timer
@@ -66,13 +67,24 @@ class MainActivity : BaseActivity<MainDesign>() {
     private lateinit var apiService: ApiService
     private  var  subData: SubscribeData? = null
 
-
+    // 启动页相关
+    private var splashShown = false
 
     private val selectnodeName: LiveData<String> by lazy {
         PreferenceLiveData(this)
     }
 
     override suspend fun main() {
+        // 先显示启动页
+        if (!splashShown) {
+            splashShown = true
+            val splashBinding = ActivitySplashBinding.inflate(layoutInflater, null, false)
+            setContentView(splashBinding.root)
+            
+            // 等待一小段时间让启动页显示
+            delay(500)
+        }
+
         val design = MainDesign(this)
 
         if (PreferenceManager.isLoginin){
