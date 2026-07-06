@@ -281,12 +281,15 @@ jobs:
   notify:
     name: Send Notification
     needs: [build-android]
-    runs-on: ubuntu
+    runs-on: ubuntu-latest
     if: ${{ always() && github.event_name == 'push' }}
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
     steps:
       - name: Send Telegram Notification
-        if: ${{ secrets.TELEGRAM_BOT_TOKEN != '' }}
+        if: ${{ env.TELEGRAM_BOT_TOKEN != '' }}
         run: |
           echo "Telegram notification would be sent here"
           echo "Build status: ${{ needs.build-android.result }}"
