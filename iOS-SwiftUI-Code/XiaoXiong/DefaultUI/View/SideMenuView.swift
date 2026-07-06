@@ -325,11 +325,16 @@ struct SideMenuView: View {
     
     @MainActor
     public func reloadSubscribe() async {
-        
+
         isLoading = true
         errorMessage = nil
-        
-        let userInfoUrl = URL(string: "\(UserManager.shared.baseURL())user/getSubscribe")!
+
+        let requestURLStr = "\(UserManager.shared.baseURL())user/getSubscribe"
+        guard let userInfoUrl = URL(string: requestURLStr) else {
+            self.errorMessage = "URL格式错误: \(requestURLStr)"
+            self.isLoading = false
+            return
+        }
         var request = URLRequest(url: userInfoUrl)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -338,16 +343,29 @@ struct SideMenuView: View {
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 self.isLoading = false
-                
+
                 if let error = error {
                     self.errorMessage = "套餐数据请求失败: \(error.localizedDescription)"
                     return
                 }
-                
+
                 guard let data = data else {
                     self.errorMessage = "套餐数据请求失败:数据为空"
                     return
-                } 
+                }
+
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("Subscribe response: \(jsonString.prefix(1000))")
+                }
+
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("Subscribe HTTP status: \(httpResponse.statusCode)")
+                    if httpResponse.statusCode != 200 {
+                        self.errorMessage = "服务器返回错误: HTTP \(httpResponse.statusCode)"
+                        return
+                    }
+                }
+
                 // Parse the user info response
                 do {
                     let Subscribe = try JSONDecoder().decode(SubscribeReponse.self, from: data)
@@ -360,6 +378,22 @@ struct SideMenuView: View {
                         self.errorMessage = Subscribe.message ?? ""
                     }
 
+                } catch let decodingError as DecodingError {
+                    var detail = ""
+                    switch decodingError {
+                    case .typeMismatch(let type, let context):
+                        detail = "类型不匹配: 期望\(type), 路径: \(context.codingPath.map(\.stringValue).joined(separator: "."))"
+                    case .keyNotFound(let key, let context):
+                        detail = "缺少字段: \(key.stringValue), 路径: \(context.codingPath.map(\.stringValue).joined(separator: "."))"
+                    case .valueNotFound(let type, let context):
+                        detail = "值为空: 期望\(type), 路径: \(context.codingPath.map(\.stringValue).joined(separator: "."))"
+                    case .dataCorrupted(let context):
+                        detail = "数据损坏: \(context.debugDescription), 路径: \(context.codingPath.map(\.stringValue).joined(separator: "."))"
+                    @unknown default:
+                        detail = "\(decodingError)"
+                    }
+                    print("Subscribe DecodingError: \(detail)")
+                    self.errorMessage = "套餐数据解析失败: \(detail)"
                 } catch {
                     self.errorMessage = "套餐数据请求失败: \(error.localizedDescription)"
                 }

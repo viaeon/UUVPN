@@ -29,7 +29,7 @@ struct SubscribeReponseClass: Codable {
     let nextResetAt: Int?
     let plan: Plan?
     let subscribeURL: String?
-    let resetDay: String?
+    let resetDay: Int?
 
     enum CodingKeys: String, CodingKey {
         case planID = "plan_id"
@@ -61,7 +61,7 @@ struct SubscribeReponseClass: Codable {
         nextResetAt = try container.decodeIfPresent(Int.self, forKey: .nextResetAt)
         plan = try container.decodeIfPresent(Plan.self, forKey: .plan)
         subscribeURL = try container.decodeIfPresent(String.self, forKey: .subscribeURL)
-        resetDay = try container.decodeIfPresent(String.self, forKey: .resetDay)
+        resetDay = try container.decodeIfPresent(Int.self, forKey: .resetDay)
     }
 }
 
