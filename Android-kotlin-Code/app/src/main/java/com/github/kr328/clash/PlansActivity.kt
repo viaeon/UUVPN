@@ -17,10 +17,11 @@ import com.github.kr328.clash.network.safeApiRequestCall
 class PlansActivity : BaseListActivity<PlanData>() {
 
     override fun createAdapter(): RecyclerView.Adapter<*> {
-        return PlanDataAdapter(){ planData ->
-            // 在这里处理 item 点击事件
+        return PlanDataAdapter(){ planData, period ->
+            // 在这里处理 item 点击事件，带上选中的周期
             val intent = Intent(this, ConfigOrderActivity::class.java)
             intent.putExtra("planData", planData) // 使用 Serializable 传递对象
+            intent.putExtra("period", period) // 传递选中的周期
             startActivity(intent)
         }
     }

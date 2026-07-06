@@ -92,7 +92,7 @@ class ConfigOrderDesign (context: Context) : Design<ConfigOrderDesign.Request>(c
         }
     }
 
-    fun fillData(plan: PlanData?){
+    fun fillData(plan: PlanData?, preSelectedPeriod: String = "month_price"){
 
 
         binding.configorderPlanname = "商品名称：${plan?.name}"
@@ -108,10 +108,10 @@ class ConfigOrderDesign (context: Context) : Design<ConfigOrderDesign.Request>(c
 
         binding.configorderPlantransfer = "商品流量：${plan?.transfer_enable} GB"
         if (plan?.onetime_price !=null) {
-            binding.configorderPlanamount = "¥ ${plan?.onetime_price.toFloat()/100}0"
+            binding.configorderPlanamount = "¥ ${String.format("%.2f", plan.onetime_price.toFloat()/100)}"
         }else{
             if (plan?.month_price !=null) {
-                binding.configorderPlanamount = "¥ ${plan?.month_price.toFloat() / 100}0"
+                binding.configorderPlanamount = "¥ ${String.format("%.2f", plan.month_price.toFloat()/100)}"
             }
         }
 
@@ -126,7 +126,7 @@ class ConfigOrderDesign (context: Context) : Design<ConfigOrderDesign.Request>(c
 
             val frameLayout =  ActivityPlanItemBinding.inflate(context.layoutInflater, context.root, false)
             frameLayout.typeTextView.text = "一次性"
-            frameLayout.amountTextView.text = "¥ ${ (map.get("amount")?.toDouble() ?: 0.0)/100}0"
+            frameLayout.amountTextView.text = "¥ ${String.format("%.2f", (map.get("amount")?.toDouble() ?: 0.0)/100)}"
 
             binding.container.addView(frameLayout.root)
 
@@ -143,7 +143,6 @@ class ConfigOrderDesign (context: Context) : Design<ConfigOrderDesign.Request>(c
             map.put("period","month_price");
             map.put("plan_id","${plan?.id}");
 
-            currentChoose = map
             val map2 =  HashMap<String,String>()
             map2.put("type","按季");//存储key和value
             map2.put("amount","${plan?.quarter_price ?: 0}");
@@ -178,13 +177,20 @@ class ConfigOrderDesign (context: Context) : Design<ConfigOrderDesign.Request>(c
                 list.add(map4)
             }
 
+            // 根据预选周期找到对应的索引
+            selectedIndex = list.indices.find { list[it]["period"] == preSelectedPeriod } ?: 0
+            currentChoose = list[selectedIndex]
+
+            // 更新顶部显示
+            binding.configorderPlantype2 = currentChoose?.get("type") ?: "按月"
+            binding.configorderPlanamount = "¥ ${String.format("%.2f", (currentChoose?.get("amount")?.toDouble() ?: 0.0)/100)}"
 
             for (i in list.indices) {
                 // 设置点击事件和单选逻辑
                 val frameLayout =  ActivityPlanItemBinding.inflate(context.layoutInflater, context.root, false)
                 val item = list[i]
                 frameLayout.typeTextView.text =  item.get("type")
-                frameLayout.amountTextView.text ="¥ ${ (item.get("amount")?.toDouble() ?: 0.0)/100}0"
+                frameLayout.amountTextView.text ="¥ ${String.format("%.2f", (item.get("amount")?.toDouble() ?: 0.0)/100)}"
 
 
 
@@ -194,11 +200,10 @@ class ConfigOrderDesign (context: Context) : Design<ConfigOrderDesign.Request>(c
                     currentChoose = item
 
                     binding.configorderPlantype2 = item.get("type")
-                    binding.configorderPlanamount =  "¥ ${ (item.get("amount")?.toDouble() ?: 0.0)/100}0"
+                    binding.configorderPlanamount =  "¥ ${String.format("%.2f", (item.get("amount")?.toDouble() ?: 0.0)/100)}"
 
                     for (j in 0 until binding.container.childCount) {
                         val child = binding.container.getChildAt(j)
-                        println("selectedIndex: ${selectedIndex}  ${ child.background} ")
                         child.background = ContextCompat.getDrawable(
                             context,
                             if (j == selectedIndex) R.drawable.card_border_selected else R.drawable.card_border
@@ -208,13 +213,11 @@ class ConfigOrderDesign (context: Context) : Design<ConfigOrderDesign.Request>(c
                 binding.container.addView(frameLayout.root)
 
 
-                if (i == 0){
-                    //默认选中第一个
-
+                if (i == selectedIndex){
+                    // 默认选中预选周期
                     frameLayout.planitemFrameLayout.background = ContextCompat.getDrawable(
                         context,  R.drawable.card_border_selected
                     )
-
                 }
 
             }

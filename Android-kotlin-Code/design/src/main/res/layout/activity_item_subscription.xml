@@ -1,395 +1,244 @@
-
+<?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
 <androidx.cardview.widget.CardView
+    android:id="@+id/plan_card_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
     app:cardElevation="4dp"
-    app:cardCornerRadius="6dp"
+    app:cardCornerRadius="12dp"
     android:layout_margin="8dp"
-   >
-
+    app:cardBackgroundColor="@color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@color/white"
-        >
+        android:padding="16dp">
 
+        <!-- 套餐头部：名称和流量 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="10dp"
-            android:weightSum="1"
-       >
+            android:gravity="center_vertical">
 
-            <!-- 左侧布局：订阅名称、描述和时间 -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_weight="0.7"
-                android:paddingEnd="8dp">
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-                <!-- 订阅名称 -->
                 <TextView
                     android:id="@+id/subscriptionName"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Subscription Name"
-                    android:textSize="16sp"
+                    android:text="套餐名称"
+                    android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/black"/>
 
-                <!-- 订阅描述 -->
                 <TextView
                     android:id="@+id/subscriptionDescription"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:text="Subscription "
-                    android:textSize="18sp"
-                    android:textColor="@color/red"
-                    android:layout_marginTop="4dp"/>
-
-                <!-- 时间或其他信息 -->
-                <TextView
-                    android:id="@+id/subscriptionTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Updated 2 days ago"
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:layout_marginTop="0dp"/>
-
-
-
-            </LinearLayout>
-
-            <!-- 右侧布局：金额和状态 -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:layout_weight="0.3"
-                android:gravity="center_vertical|right">
-
-                <!-- 金额 -->
-                <TextView
-                    android:id="@+id/subscriptionAmount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:textStyle="bold"
-                    android:gravity="end"/>
-
-                <!-- 状态 -->
-                <TextView
-                    android:id="@+id/subscriptionStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-
+                    android:text="流量信息"
                     android:textSize="14sp"
-                    android:textColor="@color/black"
-                    android:layout_marginTop="8dp"
-                    android:gravity="end"/>
+                    android:textColor="@color/gray"
+                    android:layout_marginTop="4dp"/>
             </LinearLayout>
 
-
-        </LinearLayout>
-
-        <HorizontalScrollView
-            android:id="@+id/groups_Scrollview"
-            android:scrollbars="none"
-            android:layout_width="match_parent"
-            android:padding="6dp"
-            android:layout_height="wrap_content" >
+            <!-- 价格标签 -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="5dp">
-                <!-- ImageView: 具有圆角的图片 -->
-                <RelativeLayout
-                    android:id="@+id/grouponemohtthtest"
+                android:orientation="vertical"
+                android:gravity="end">
+
+                <TextView
+                    android:id="@+id/subscriptionPrice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="5dp">
-                    <androidx.appcompat.widget.AppCompatImageView
+                    android:text="¥10"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="#2196F3"/>
 
-                        android:layout_width="80dp"
-                        android:layout_height="110dp"
-                        android:src="@drawable/testonemoth"
-
-                        android:scaleType="fitStart"  />
-
-                    <TextView
-                        android:id="@+id/onemohtthtest"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="1个月"
-                        android:textSize="13dp"
-                        android:textColor="@color/black" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="30dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="¥"
-                        android:textSize="13dp"
-                        android:textColor="@color/black"
-                        android:layout_alignTop="@+id/onemohtthtest"/>
-                    <TextView
-                        android:id="@+id/onemonthprice"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
-                        android:textSize="22dp"
-                        android:layout_marginLeft="18dp"
-                        android:text="25"
-                        android:textStyle="bold"
-
-                        android:textColor="@color/black"
-                        android:layout_alignTop="@+id/onemohtthtest"/>
-
-
-                    <TextView
-                        android:id="@+id/onemonthpriceday"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="29dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="0.8元/天"
-                        android:textSize="11dp"
-                        android:textColor="@color/gray"
-                        android:layout_alignTop="@+id/onemonthprice"/>
-                    <TextView
-
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="9折"
-                        android:textSize="11dp"
-                        android:textColor="@color/black"
-                        android:layout_alignTop="@+id/onemonthpriceday"/>
-                </RelativeLayout>
-
-                <RelativeLayout
+                <TextView
+                    android:id="@+id/subscriptionPriceUnit"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/groupquitytthtest"
-                    android:layout_marginEnd="5dp">
-                    <androidx.appcompat.widget.AppCompatImageView
+                    android:text="起/月"
+                    android:textSize="12sp"
+                    android:textColor="@color/gray"/>
+            </LinearLayout>
+        </LinearLayout>
 
-                        android:layout_width="80dp"
-                        android:layout_height="110dp"
-                        android:src="@drawable/testonemoth"
+        <!-- 分隔线 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"/>
 
-                        android:scaleType="fitStart"  />
+        <!-- 价格选项区域 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-                    <TextView
-                        android:id="@+id/onequietythtest"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="1个季度"
-                        android:textSize="13dp"
-                        android:textColor="@color/black" />
+            <!-- 月付价格 -->
+            <LinearLayout
+                android:id="@+id/layout_month"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="8dp"
+                android:background="@drawable/price_item_bg"
+                android:clickable="true"
+                android:focusable="true">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="30dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="¥"
-                        android:textSize="13dp"
-                        android:textColor="@color/black"
-                        android:layout_alignTop="@+id/onequietythtest"/>
-                    <TextView
-                        android:id="@+id/onequietyprice"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-
-                        android:layout_marginLeft="18dp"
-                        android:text="25"
-                        android:textStyle="bold"
-                        android:layout_marginTop="20dp"
-                        android:textSize="22dp"
-                        android:textColor="@color/black"
-                        android:layout_alignTop="@+id/onequietythtest"/>
-
-
-                    <TextView
-                        android:id="@+id/onequietypriceday"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="29dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="0.8元/天"
-                        android:textSize="11dp"
-                        android:textColor="@color/gray"
-                        android:layout_alignTop="@+id/onequietyprice"/>
-                    <TextView
-
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="8折"
-                        android:textSize="11dp"
-                        android:textColor="@color/black"
-                        android:layout_alignTop="@+id/onequietypriceday"/>
-                </RelativeLayout>
-
-                <RelativeLayout
+                <TextView
+                    android:id="@+id/text_month_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/grouphelfyear"
-                    android:layout_marginEnd="5dp">
-                    <androidx.appcompat.widget.AppCompatImageView
+                    android:text="月付"
+                    android:textSize="12sp"
+                    android:textColor="@color/gray"/>
 
-                        android:layout_width="80dp"
-                        android:layout_height="110dp"
-                        android:src="@drawable/testonemoth"
-
-                        android:scaleType="fitStart"  />
-
-                    <TextView
-                        android:id="@+id/helfyearthtest"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="半年"
-                        android:textSize="13dp"
-                        android:textColor="@color/black" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="30dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="¥"
-                        android:textSize="13dp"
-                        android:textColor="@color/black"
-                        android:layout_alignTop="@+id/helfyearthtest"/>
-                    <TextView
-                        android:id="@+id/helfyearprice"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-
-                        android:layout_marginLeft="18dp"
-                        android:text="25"
-                        android:textStyle="bold"
-                        android:layout_marginTop="20dp"
-                        android:textSize="22dp"
-                        android:textColor="@color/black"
-                        android:layout_alignTop="@+id/helfyearthtest"/>
-
-
-                    <TextView
-                        android:id="@+id/helfyearpriceday"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="29dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="0.8元/天"
-                        android:textSize="11dp"
-                        android:textColor="@color/gray"
-                        android:layout_alignTop="@+id/helfyearprice"/>
-                    <TextView
-
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="7.8折"
-                        android:textSize="11dp"
-                        android:textColor="@color/black"
-                        android:layout_alignTop="@+id/helfyearpriceday"/>
-                </RelativeLayout>
-
-                <RelativeLayout
+                <TextView
+                    android:id="@+id/text_month_price"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/grouponeyear"
-                    android:layout_marginEnd="5dp">
-                    <androidx.appcompat.widget.AppCompatImageView
-
-                        android:layout_width="80dp"
-                        android:layout_height="110dp"
-                        android:src="@drawable/testonemoth"
-
-                        android:scaleType="fitStart"  />
-
-                    <TextView
-                        android:id="@+id/oneyearthtest"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="1年"
-                        android:textSize="13dp"
-                        android:textColor="@color/black" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="30dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="¥"
-                        android:textSize="13dp"
-                        android:textColor="@color/black"
-                        android:layout_alignTop="@+id/oneyearthtest"/>
-                    <TextView
-                        android:id="@+id/oneyearprice"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-
-                        android:layout_marginLeft="18dp"
-                        android:text="25"
-                        android:textStyle="bold"
-                        android:layout_marginTop="20dp"
-                        android:textSize="22dp"
-                        android:textColor="@color/black"
-                        android:layout_alignTop="@+id/oneyearthtest"/>
-
-
-                    <TextView
-                        android:id="@+id/oneyearpriceday"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="29dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="0.8元/天"
-                        android:textSize="11dp"
-                        android:textColor="@color/gray"
-                        android:layout_alignTop="@+id/oneyearprice"/>
-                    <TextView
-
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="5.9折"
-                        android:textSize="11dp"
-                        android:textColor="@color/black"
-                        android:layout_alignTop="@+id/oneyearpriceday"/>
-                </RelativeLayout>
-
+                    android:text="¥10"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    android:layout_marginTop="2dp"/>
             </LinearLayout>
 
+            <!-- 季付价格 -->
+            <LinearLayout
+                android:id="@+id/layout_quarter"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="8dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/price_item_bg"
+                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true">
 
-        </HorizontalScrollView>
+                <TextView
+                    android:id="@+id/text_quarter_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="季付"
+                    android:textSize="12sp"
+                    android:textColor="@color/gray"/>
+
+                <TextView
+                    android:id="@+id/text_quarter_price"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="¥28"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    android:layout_marginTop="2dp"/>
+            </LinearLayout>
+
+            <!-- 半年付价格 -->
+            <LinearLayout
+                android:id="@+id/layout_half_year"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="8dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/price_item_bg"
+                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:id="@+id/text_half_year_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="半年"
+                    android:textSize="12sp"
+                    android:textColor="@color/gray"/>
+
+                <TextView
+                    android:id="@+id/text_half_year_price"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="¥50"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    android:layout_marginTop="2dp"/>
+            </LinearLayout>
+
+            <!-- 年付价格 -->
+            <LinearLayout
+                android:id="@+id/layout_year"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="8dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/price_item_bg"
+                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:id="@+id/text_year_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="年付"
+                    android:textSize="12sp"
+                    android:textColor="@color/gray"/>
+
+                <TextView
+                    android:id="@+id/text_year_price"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="¥88"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    android:layout_marginTop="2dp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 底部提示 -->
+        <TextView
+            android:id="@+id/subscriptionHint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="点击价格选择周期，点击卡片进入详情"
+            android:textSize="11sp"
+            android:textColor="@color/gray"
+            android:layout_marginTop="8dp"
+            android:layout_gravity="center_horizontal"/>
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>
 </layout>

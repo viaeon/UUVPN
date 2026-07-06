@@ -17,13 +17,13 @@ class ConfigOrderActivity : BaseActivity<ConfigOrderDesign>()  {
 
     override suspend fun main() {
 
-        // 获取 Intent 并接收传递的 PlanData 对象
-        // 使用 Parcelable 获取对象
+        // 获取 Intent 并接收传递的 PlanData 对象和周期
         val planData = intent.getSerializableExtra("planData") as? PlanData
+        val selectedPeriod = intent.getStringExtra("period") ?: "month_price"
 
         val design = ConfigOrderDesign(this)
         setContentDesign(design)
-        design.fillData(planData)
+        design.fillData(planData, selectedPeriod)
 
         val ticker = ticker(TimeUnit.SECONDS.toMillis(1))
 
