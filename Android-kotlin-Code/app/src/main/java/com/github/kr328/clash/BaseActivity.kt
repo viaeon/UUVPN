@@ -84,6 +84,9 @@ abstract class BaseActivity<D : Design<*>> : AppCompatActivity(),
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 切换回正常主题（从启动主题切换）
+        setTheme(com.github.kr328.clash.design.R.style.AppThemeLight)
+
         super.onCreate(savedInstanceState)
         applyDayNight()
 

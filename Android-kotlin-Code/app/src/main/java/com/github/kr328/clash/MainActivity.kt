@@ -73,9 +73,6 @@ class MainActivity : BaseActivity<MainDesign>() {
     }
 
     override suspend fun main() {
-        // 切换回正常主题（从启动主题切换）
-        setTheme(com.github.kr328.clash.design.R.style.BootstrapTheme)
-
         val design = MainDesign(this)
 
         if (PreferenceManager.isLoginin){
