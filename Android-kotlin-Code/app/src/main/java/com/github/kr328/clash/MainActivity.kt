@@ -63,7 +63,6 @@ import kotlin.concurrent.timer
 
 class MainActivity : BaseActivity<MainDesign>() {
 
-
     private lateinit var apiService: ApiService
     private  var  subData: SubscribeData? = null
 
@@ -74,6 +73,9 @@ class MainActivity : BaseActivity<MainDesign>() {
     }
 
     override suspend fun main() {
+        // 切换回正常主题（从启动主题切换）
+        setTheme(R.style.BootstrapTheme)
+
         val design = MainDesign(this)
 
         if (PreferenceManager.isLoginin){
