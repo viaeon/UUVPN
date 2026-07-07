@@ -1,7 +1,5 @@
 package com.github.kr328.clash
 
-import android.os.Handler
-import android.os.Looper
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.PopupMenu
 import androidx.lifecycle.LiveData
@@ -26,7 +24,6 @@ import com.github.kr328.clash.design.PreferenceLiveData
 import com.github.kr328.clash.design.PreferenceManager
 import com.github.kr328.clash.design.R
 import com.github.kr328.clash.design.component.ProxyMenu
-import com.github.kr328.clash.design.databinding.ActivitySplashBinding
 import com.github.kr328.clash.design.dialog.requestModelTextInput
 import com.github.kr328.clash.design.dialog.withModelProgressBar
 import com.github.kr328.clash.design.network.APIGlobalObject
@@ -67,24 +64,11 @@ class MainActivity : BaseActivity<MainDesign>() {
     private lateinit var apiService: ApiService
     private  var  subData: SubscribeData? = null
 
-    // 启动页相关
-    private var splashShown = false
-
     private val selectnodeName: LiveData<String> by lazy {
         PreferenceLiveData(this)
     }
 
     override suspend fun main() {
-        // 先显示启动页
-        if (!splashShown) {
-            splashShown = true
-            val splashBinding = ActivitySplashBinding.inflate(layoutInflater, null, false)
-            setContentView(splashBinding.root)
-            
-            // 等待一小段时间让启动页显示
-            delay(500)
-        }
-
         val design = MainDesign(this)
 
         if (PreferenceManager.isLoginin){
@@ -291,15 +275,8 @@ class MainActivity : BaseActivity<MainDesign>() {
 
 
         }else{
-            val binding = ActivitySplashBinding
-                .inflate(this.layoutInflater, this.root, false)
-
-            setContentView(binding.root)
-
-            Handler(Looper.getMainLooper()).postDelayed({
-                startActivity(LoginActivity::class.intent)
-
-            }, 1000) // Simulating a network delay
+            startActivity(LoginActivity::class.intent)
+            finish()
         }
 
     }

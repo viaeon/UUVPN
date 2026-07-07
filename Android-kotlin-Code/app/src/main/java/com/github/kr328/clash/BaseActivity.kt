@@ -84,6 +84,7 @@ abstract class BaseActivity<D : Design<*>> : AppCompatActivity(),
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.BootstrapTheme)
         super.onCreate(savedInstanceState)
         applyDayNight()
 
