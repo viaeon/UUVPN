@@ -2,12 +2,11 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- 透明背景 -->
     <item android:drawable="@android:color/transparent" />
-    <!-- 76dp 图标居中，通过边距实现 -->
+    <!-- 72dp 图标居中 -->
     <item
-        android:top="34dp"
-        android:bottom="34dp"
-        android:left="34dp"
-        android:right="34dp">
+        android:width="72dp"
+        android:height="72dp"
+        android:gravity="center">
         <bitmap
             android:src="@drawable/appstore"
             android:gravity="fill" />
